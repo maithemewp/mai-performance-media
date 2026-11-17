@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Delay Instagram, X, TikTok and Pinterest embed scripts until each embed nears the screen, then rename the plugin to Mai Performance Media and ship it as 1.0.0 from a new repo.
+**Goal:** Delay Instagram, X, TikTok and Pinterest embed scripts until each embed nears the screen, then rename the plugin and its repo to Mai Performance Media and ship it as 1.0.0.
 
 **Architecture:** A new `EmbedLoading` class adds its own callback to WordPress's finished-page filter (`wp_template_enhancement_output_buffer`), removes the `src` from known embed script tags with `WP_HTML_Tag_Processor`, and prints a small inline loader before `</body>`. The loader takes each embed's marker off, watches it with one IntersectionObserver (200px margin), and puts the marker back, loads the network's script once and asks the network to render that embed as it nears. The rename is a separate mechanical task after the feature works.
 
@@ -169,28 +169,24 @@ Expected: embed bytes and embed main-thread time near 0 with the feature on, and
 
 - [ ] **Step 2:** Add the medians to `STATE.md` under Verify, with the date and Lighthouse version. Commit.
 
-### Task 5: The swap runbook and the old plugin's last release
+### Task 5: The swap runbook
 
 **Files:**
 - Create: `docs/runbooks/2026-11-17-swap-to-mai-performance-media.md`
-- On the old plugin only: `mai-performance-images.php`, `CHANGES.md` for 0.9.2 (see Step 2)
 
 - [ ] **Step 1: Write the runbook.** Steps, in order, each with its exact command and how to check it worked:
-  1. Create `maithemewp/mai-performance-media` on GitHub and push `main` and `develop` with history. (Ask first.)
-  2. Tag and release 1.0.0 from the new repo's `main`. (Ask first.)
-  3. Release 0.9.2 of the old plugin from the old repo's `main` (Step 2 below). (Ask first.)
-  4. For each site with the old plugin, from `mai-sites plugins list mai-performance-images`: install the new plugin (a `mai-sites push` of the new folder, or `wp plugin install` from the 1.0.0 release zip), then in one command deactivate the old plugin, activate the new one and delete the old one. A site where the old plugin was inactive only gets the old one deleted. Run one site at a time on the server the build prompt names.
-  5. Check each site boots and serves a page with one `fetchpriority="high"` image.
-  6. Rerun `mai-sites plugins list mai-performance-images` until it lists no site, and `mai-sites plugins list mai-performance-media` to see every site active.
-  7. Update the outside references the spec lists (theme plugin lists, skills), then archive the old repo. (Ask first.)
+  1. Rename the GitHub repo from `maithemewp/mai-performance-images` to `maithemewp/mai-performance-media`, and point the local `origin` at the new URL. (Ask first.)
+  2. Push, tag and release 1.0.0 from `main`. (Ask first.)
+  3. For each site with the old plugin, from `mai-sites plugins list mai-performance-images`: install the new plugin (a `mai-sites push` of the new folder, or `wp plugin install` from the 1.0.0 release zip), then in one command deactivate the old plugin, activate the new one and delete the old one. A site where the old plugin was inactive only gets the old one deleted. Run one site at a time on the server the build prompt names.
+  4. Check each site boots and serves a page with one `fetchpriority="high"` image.
+  5. Rerun `mai-sites plugins list mai-performance-images` until it lists no site, and `mai-sites plugins list mai-performance-media` to see every site active.
+  6. Update the outside references the spec lists (theme plugin lists, skills), and rename the local folder to `~/Plugins/mai-performance-media` with the local site symlinks pointed at it.
   No site names in the runbook; it refers to `mai-sites` targets.
 
-- [ ] **Step 2: The 0.9.2 notice, on the old plugin.** On a branch named `release/0.9.2` from this repo's `main` (at 0.9.1, commit `1d42bd2`; this local repo is the old plugin's repo until the new one exists), add an `admin_notices` callback in `mai-performance-images.php` shown to users who can `activate_plugins`: "Mai Performance Images is now Mai Performance Media. Install Mai Performance Media, then delete this plugin. Your image settings carry over." Bump to 0.9.2 in the header and constant, add a `## 0.9.2` CHANGES entry. This commit goes only to the old repo; it is never merged into the renamed plugin.
-
-- [ ] **Step 3: Commit** the runbook on the renamed plugin's `develop`. Commit 0.9.2 on its own branch. Do not push either. Report and stop: everything after this needs a yes.
+- [ ] **Step 2: Commit** the runbook on `develop`. Do not push. Report and stop: everything after this needs a yes.
 
 ## Done when
 
 - `composer test` passes, `npm run check:embeds` exits 0 on the build prompt's posts, the Pinterest check matches, and Task 4's numbers are in `STATE.md`.
-- The renamed plugin is committed locally as 1.0.0, the 0.9.2 commit sits on its own branch, and the runbook is written. Nothing is pushed, tagged or created on GitHub.
+- The renamed plugin is committed locally as 1.0.0, and the runbook is written. Nothing is pushed, tagged or created on GitHub.
 - Run `/pr-review-toolkit:review-pr` on the branch before asking to push.

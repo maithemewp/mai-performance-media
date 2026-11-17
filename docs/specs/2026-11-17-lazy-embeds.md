@@ -134,7 +134,7 @@ Outside the repo, to update once it ships:
 
 Every site is swapped with `mai-sites`: install the new plugin, then deactivate the old one and activate the new one in a single command so the two never run together, then delete the old one. That procedure goes in `docs/runbooks/`. Run it one site at a time on the server named in the build prompt: parallel WP-CLI runs there hit "Error establishing a database connection" on 9 of 21 sites on 2026-11-17, while the same command one site at a time worked on all of them.
 
-A site the swap misses gets no warning. The updater only offers an update when the repo holds a main file with the installed one's name (`plugin-update-checker/Puc/v5p7/Vcs/PluginUpdateChecker.php:81`), so once the repo holds `mai-performance-media.php` an old install stays on 0.9.1 quietly. Decided: the renamed plugin lives in a new repo, `maithemewp/mai-performance-media`, carrying this repo's history. The old repo gets one last release, 0.9.2, which only adds an admin notice saying the plugin was replaced by Mai Performance Media, and is then archived. Sites are swapped with a `mai-sites` push or run that installs the new plugin and deletes the old one, and `mai-sites plugins list mai-performance-images` is rerun until it lists no site.
+A site the swap misses gets no warning. The updater only offers an update when the repo holds a main file with the installed one's name (`plugin-update-checker/Puc/v5p7/Vcs/PluginUpdateChecker.php:81`), so once the repo holds `mai-performance-media.php` an old install stays on 0.9.1 quietly. Decided: the existing repo is renamed on GitHub from `maithemewp/mai-performance-images` to `maithemewp/mai-performance-media`, and the plugin is renamed in it. No new repo, no last release of the old plugin, no notice, nothing archived. Every site is swapped by hand with `mai-sites`, so no site relies on the updater to move. Sites are swapped with a `mai-sites` push or run that installs the new plugin and deletes the old one, and `mai-sites plugins list mai-performance-images` is rerun until it lists no site.
 
 ## Testing
 
@@ -159,4 +159,4 @@ A site the swap misses gets no warning. The updater only offers an update when t
 
 ## Open questions
 
-None. Decided while walking the spec on 2026-11-17: separate from Mai Embed Fixer, each embed rendered as it nears, the full rename to a new repo with a 0.9.2 notice on the old one, the old cleanup code dropped, TikTok delayed in v1 though unverified, Pinterest in v1.
+None. Decided while walking the spec on 2026-11-17: separate from Mai Embed Fixer, each embed rendered as it nears, the full rename by renaming the existing repo, with every site swapped by hand, the old cleanup code dropped, TikTok delayed in v1 though unverified, Pinterest in v1.
