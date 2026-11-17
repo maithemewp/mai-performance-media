@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * The case order is the order the loader lists them in. Each one knows which pasted
  * script tags belong to it, and the one fixed address the loader fetches later.
  *
- * @since 0.10.0
+ * @since 1.0.0
  */
 enum EmbedNetwork: string {
 	case Instagram = 'instagram';
@@ -28,7 +28,7 @@ enum EmbedNetwork: string {
 	 * http://, a protocol-relative or an upper-case copy all match. A subdomain such
 	 * as www. is allowed where the library lives on one.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @param string $src The script's src attribute.
 	 *
@@ -57,7 +57,7 @@ enum EmbedNetwork: string {
 	/**
 	 * Returns the address parts a pasted script is recognized by, without a protocol.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @return string[]
 	 */
@@ -75,7 +75,7 @@ enum EmbedNetwork: string {
 	 *
 	 * Always https, and the same whichever pasted copy was delayed.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @return string
 	 */

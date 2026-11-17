@@ -20,13 +20,13 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * It uses the same page filter as LoadingAttributes, but does its own pass: that walk
  * only visits images, and the two jobs share nothing.
  *
- * @since 0.10.0
+ * @since 1.0.0
  */
 final class EmbedLoading {
 	/**
 	 * The id of the loader's script tag.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @var string
 	 */
@@ -35,7 +35,7 @@ final class EmbedLoading {
 	/**
 	 * The loader's source, read once per request.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @var string|null
 	 */
@@ -44,7 +44,7 @@ final class EmbedLoading {
 	/**
 	 * Constructor.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -57,7 +57,7 @@ final class EmbedLoading {
 	/**
 	 * Adds the finished-page filter.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -70,7 +70,7 @@ final class EmbedLoading {
 	 *
 	 * WP filter callbacks must be public.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @param mixed $html The finished page.
 	 *
@@ -84,7 +84,7 @@ final class EmbedLoading {
 		/**
 		 * Filters whether social embed scripts are delayed until an embed nears the screen.
 		 *
-		 * @since 0.10.0
+		 * @since 1.0.0
 		 *
 		 * @param bool $delay Whether to delay them. Default true.
 		 */
@@ -134,7 +134,7 @@ final class EmbedLoading {
 	/**
 	 * Whether the page mentions any known embed script, as a quick check before the walk.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @param string $html The finished page.
 	 *
@@ -158,7 +158,7 @@ final class EmbedLoading {
 	 * Built with wp_get_inline_script_tag() so a site's script attribute filters,
 	 * such as a content security policy nonce, apply to it.
 	 *
-	 * @since 0.10.0
+	 * @since 1.0.0
 	 *
 	 * @param string $html     The page.
 	 * @param string $networks The delayed networks, comma separated.
