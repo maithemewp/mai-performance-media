@@ -26,6 +26,8 @@ class ComposerStaticInit5ecbabff5f374cf0a6ff2146b68b0b1b
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Mai\\PerformanceImages\\EmbedLoading' => __DIR__ . '/../..' . '/classes/class-embed-loading.php',
+        'Mai\\PerformanceImages\\EmbedNetwork' => __DIR__ . '/../..' . '/classes/enum-embed-network.php',
         'Mai\\PerformanceImages\\ImageLoading' => __DIR__ . '/../..' . '/classes/class-image-loading.php',
         'Mai\\PerformanceImages\\LoadingAttributes' => __DIR__ . '/../..' . '/classes/class-loading-attributes.php',
         'Mai\\PerformanceImages\\LoadingBudget' => __DIR__ . '/../..' . '/classes/class-loading-budget.php',

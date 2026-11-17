@@ -7,6 +7,8 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'Mai\\PerformanceImages\\EmbedLoading' => $baseDir . '/classes/class-embed-loading.php',
+    'Mai\\PerformanceImages\\EmbedNetwork' => $baseDir . '/classes/enum-embed-network.php',
     'Mai\\PerformanceImages\\ImageLoading' => $baseDir . '/classes/class-image-loading.php',
     'Mai\\PerformanceImages\\LoadingAttributes' => $baseDir . '/classes/class-loading-attributes.php',
     'Mai\\PerformanceImages\\LoadingBudget' => $baseDir . '/classes/class-loading-budget.php',

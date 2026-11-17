@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Mai\PerformanceImages\Tests;
 
+use Mai\PerformanceImages\EmbedLoading;
 use Mai\PerformanceImages\LoadingAttributes;
 use WP_UnitTestCase;
 
@@ -56,6 +57,7 @@ abstract class TestCase extends WP_UnitTestCase {
 	 */
 	protected function page( callable $render ): string {
 		LoadingAttributes::instance()->add_page_filter();
+		( new EmbedLoading() )->add_page_filter();
 
 		ob_start();
 

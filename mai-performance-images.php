@@ -21,6 +21,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 // Initialize.
 LoadingAttributes::instance();
+new EmbedLoading();
 new ImageLoading();
 new MaiBlocks();
 new Updater();
