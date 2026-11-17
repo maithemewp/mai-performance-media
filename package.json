@@ -11,10 +11,12 @@
 		"lint:pkg-json": "wp-scripts lint-pkg-json",
 		"packages-update": "wp-scripts packages-update",
 		"test:e2e": "wp-scripts test-e2e",
-		"test:unit": "wp-scripts test-unit-js"
+		"test:unit": "wp-scripts test-unit-js",
+		"check:embeds": "node bin/check-embeds.mjs"
 	},
 	"devDependencies": {
 		"@wordpress/scripts": "^30.14.1",
+		"playwright": "^1.65.1",
 		"webpack-cli": "^6.0.1"
 	}
 }

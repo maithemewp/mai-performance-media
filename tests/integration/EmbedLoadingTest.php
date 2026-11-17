@@ -66,7 +66,10 @@ final class EmbedLoadingTest extends TestCase {
 	public function test_unusual_src_forms_are_delayed( string $src ): void {
 		$out = $this->run_filter( $this->page_html( self::INSTAGRAM_QUOTE . '<script async src="' . $src . '"></script>' ) );
 
-		$this->assertStringNotContainsString( 'embed.js', str_replace( 'instagram.com/embed.js', '', $out ) );
+		// The loader names each network's script itself, so only the page around it is checked.
+		$page = (string) preg_replace( '#<script[^>]*' . self::LOADER_ID . '[^>]*>.*?</script>#s', '', $out );
+
+		$this->assertStringNotContainsStringIgnoringCase( 'embed.js', $page );
 		$this->assertStringNotContainsString( 'src="' . $src . '"', $out );
 		$this->assertSame( 1, substr_count( $out, self::LOADER_ID ) );
 	}
