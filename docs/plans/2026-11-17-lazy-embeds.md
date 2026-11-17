@@ -97,7 +97,7 @@ git commit -m "Delay embed scripts on the finished page"
 
 **Interfaces:**
 - Consumes: the loader tag's `id` and `data-networks` from Task 1. The loader reads them with `document.currentScript.dataset.networks`.
-- Produces: `bin/check-embeds.mjs <url> [<url>...]` prints one pretty-printed JSON object per URL with `scriptsAtLoad` (embed scripts requested before any scrolling), `scripts` (each embed script URL requested, with its time), `unrendered` (embeds still a blockquote or pin link after scrolling), `cls`, and exits non-zero when `scriptsAtLoad` names a network whose first embed is more than 200px below the first screen, when `unrendered` is not 0 for Instagram or X, or when `cls` is above 0.
+- Produces: `bin/check-embeds.mjs <url> [<url>...]` prints one pretty-printed JSON object per URL with `scriptsAtLoad` (embed scripts requested before any scrolling), `scripts` (each embed script URL requested, with its time), `unrendered` (embeds still a blockquote or pin link after scrolling), `cls`, and exits non-zero when `unrendered` is not 0 for Instagram or X, or when `cls` is above 0. Whether a script loaded too early is read from `scriptsAtLoad` by the person running it.
 
 - [ ] **Step 1: Write the loader** in `assets/js/lazy-embeds.js`, plain ES2017, no dependencies, wrapped in an IIFE and a `try`/`catch` so a failure leaves the fallbacks as they are. The behaviour is the spec's "In the browser: the loader" section, steps 1 to 8. The decisions it can't infer:
   - The marker attribute for a hidden Instagram or X embed is `data-mpm-embed="<network>"`. For a Pinterest pin, `data-pin-do`'s value moves to `data-mpm-pin-do` and is restored from there.
@@ -115,7 +115,7 @@ Expected: no errors.
 
 - [ ] **Step 3: Write `bin/check-embeds.mjs`.** Start from the spike's `scroll.mjs` (path in the build prompt). Headless Chromium, 412 by 823 viewport, mobile. Count layout shift with a `PerformanceObserver` on `layout-shift` entries without recent input. Scroll the whole page in 400px steps with a 350ms pause, then wait 4 seconds.
 
-- [ ] **Step 4: Run it** on a local site with the plugin symlinked (sites and post IDs are in the build prompt): one post with one Instagram embed, one with five Instagram embeds, one with X embeds, and one copy of the X post saved as a static fixture that also loads `widgets.js` in the `<head>` (Review Focus 4).
+- [ ] **Step 4: Run it** on a local site with the plugin symlinked (sites and post IDs are in the build prompt): one post with one Instagram embed, one with five Instagram embeds, one with X embeds, and the X post again with `widgets.js` already loaded in the `<head>` (Review Focus 4). For that last one, add a throwaway mu-plugin to the local site that prints `<script async src="https://platform.twitter.com/widgets.js"></script>` in `wp_head` when `?mpm_head_widgets=1` is in the URL, and delete it after the check.
 
 Run: `npm run check:embeds -- <urls>`
 Expected: exit 0. No embed script at page load on the posts whose first embed is below the first screen, every Instagram and X embed rendered, `cls` 0, and on the head fixture `widgets.js` requested once.
@@ -141,7 +141,7 @@ git commit -m "Load each embed's script as it nears the screen"
 
 - [ ] **Step 2: Rename everything else** listed above, by the Interfaces names: namespaces, `use` lines, the two filters (code and tests), the text domain in PHP and `src/block-settings.js`, the script handle in `classes/class-image-loading.php`, the ACF field group key, title and accordion label in `classes/class-mai-engine.php` (keep every `field_63f9...` key and every field `name`), the updater in `classes/class-updater.php` (`https://github.com/maithemewp/mai-performance-media/`, `mai-performance-media.php`, slug `mai-performance-media`), `composer.json` name and PSR-4 namespace, `tests/composer.json`, `tests/plugin-loader.php`, `tests/phpunit.xml.dist`, `tests/wp-tests-config.php` (`mai_performance_media_tests`), and README. Leave `data-mpi-loading` and the `?mpi=` cache-buster as they are. Leave `docs/` alone: dated documents keep the names they had.
 
-- [ ] **Step 3: Rebuild** with `composer dump-autoload --no-dev`, `composer update -d tests` only if `tests/composer.json`'s name change requires it, and `npm run build`.
+- [ ] **Step 3: Rebuild** with `composer dump-autoload --no-dev`, `composer update --lock -d tests` (the lock's content hash covers the package name), and `npm run build`.
 
 - [ ] **Step 4: Check nothing old is left**
 
