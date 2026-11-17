@@ -1,7 +1,11 @@
 # State
-Updated: October 30, 2026 by Claude
+Updated: November 17, 2026 by Claude
 
 ## Now
+Next release is 1.0.0, Mai Performance Media: social embed scripts (Instagram, X, TikTok, Pinterest) load as each embed nears the screen, and the plugin and its GitHub repo are renamed. Spec: `docs/specs/2026-11-17-lazy-embeds.md`. Plan: `docs/plans/2026-11-17-lazy-embeds.md`. Nothing built yet. A throwaway spike measured it on six local copies; its scripts are in `~/Plugins/_wip/mpi-embed-spike/`, outside the repo.
+
+On November 17 the old 0.7.0 and 0.9.0 cleanup was forced on every site with `mai-sites run` and rechecked clean, so 1.0.0 drops that code.
+
 0.9.1 is released (October 30): WordPress counts each image again, so iframes such as YouTube and Vimeo embeds below the main images lazy load. `count_like_wordpress()` runs core's `wp_get_loading_optimization_attributes()` with the plugin's answer held back and restores the high priority flag. Tests: `tests/integration/IframeLoadingTest.php`, which compares against WordPress alone.
 
 0.9.0 is released (October 23): the Settings > Performance Images page is gone. Its one checkbox turned the whole plugin off, the same as deactivating it. On October 23 none of the 58 sites with the plugin active had it off (34 saved on, 24 never saved). `remove_settings_leftovers()` deletes the `mai_performance_images` option on the next admin visit.
@@ -19,6 +23,7 @@ How it decides:
 Spec: `docs/specs/2026-10-14-one-main-image.md`. Plan: `docs/plans/2026-10-14-one-main-image.md`.
 
 ## Next
+- Build the plan in a fresh session. Stop before any push, tag or GitHub repo rename.
 - Settings audit, October 14 (`/tmp/mpi-audit.sh` and `/tmp/mpi-analyze.php`, gone after a reboot): fixed eurweb's and mynorth's extra Eager home page grids, Eager archive counts over 1 on mynorth, verilymag and insidetailgating, and wnbatake's menu icons (its theme now passes `fetchpriority="auto"`). Left alone: 50 harmless leftovers that act like Automatic, and the dev copies.
 - Check in a few days that the 0.7.0 sites updated: `mai-sites plugins list mai-performance-images`. 23 sites never updated past 0.2.0 to 0.6.0, and nobody knows why. Find the cause if the 0.7.0 sites don't move either.
 - Remove the `mai_publisher_html` late pass once https://github.com/bizbudding/mai-publisher/issues/62 lands.
@@ -35,6 +40,8 @@ Spec: `docs/specs/2026-10-14-one-main-image.md`. Plan: `docs/plans/2026-10-14-on
 - Mobile Lighthouse on the local eurweb News archive, 5 alternating runs each, October 14: 0.7.0 median score 71 and LCP 4.9 s; 0.8.0 median 76 and 4.3 s. 0.8.0 won 3 of 5 pairs, and the spread between runs (3.3 to 8.4 s) is bigger than the gap, so it's no worse, but not a proven win on this page. The LCP image was the first entry in every run.
 
 ## Gotchas
+- Parallel `mai-sites run` WP-CLI commands hit database connection errors on one shared server; run that server one site at a time.
+- TikTok's embeds were broken on TikTok's side on November 17 (its library returned 404), so TikTok rendering after a delayed load is unverified.
 - grandstrandlocal.com resolves to 162.255.119.197 and didn't answer on October 14, so its pages couldn't be checked. dogwheelchairlife.com redirects every visit to dogdiscoveries.com/mobility/.
 - The walk keeps at most 8 logos or small images waiting for a slot below them, because the tag processor allows 10 bookmarks. Past 8, the rest above the main image lazy load.
 - sw.doyouremember.com: Cloudflare blocks curl. Fetch with headless Chromium, a normal user agent, and basic auth doyouremember/doyouremember.
