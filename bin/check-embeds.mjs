@@ -6,8 +6,9 @@
  * For each address it prints one JSON object: the embed scripts requested before any
  * scrolling (scriptsAtLoad), every embed script requested and when (scripts), the
  * embeds still showing their pasted fallback after scrolling (unrendered), and the
- * layout shift (cls). Add a cache-busting query, since a page cache serves the page
- * from before the plugin changed.
+ * layout shift: cls is the worst session window, as Chrome reports it, and shiftTotal
+ * is every shift added up. Add a cache-busting query, since a page cache serves the
+ * page from before the plugin changed.
  *
  * Ads move the page as they fill in, which has nothing to do with embeds. To leave
  * them out, pass --block with a JSON file holding an array of hostnames, and every
@@ -101,15 +102,36 @@ async function check( url ) {
 		}
 	} );
 
-	// Counted from the start, so shifts while the page loads are included too.
+	// Counted from the start, so shifts while the page loads are included too. CLS is
+	// the worst session window, the way Chrome reports it: shifts less than 1 second
+	// apart, in a window at most 5 seconds long. The plain total is kept alongside.
 	await page.addInitScript( () => {
-		window.__mpmCls = 0;
+		const shifts = { total: 0, worst: 0, window: 0, first: 0, last: 0 };
+
+		window.__mpmShifts = shifts;
 
 		new window.PerformanceObserver( ( list ) => {
 			for ( const entry of list.getEntries() ) {
-				if ( ! entry.hadRecentInput ) {
-					window.__mpmCls += entry.value;
+				if ( entry.hadRecentInput ) {
+					continue;
 				}
+
+				const time = entry.startTime;
+
+				if (
+					shifts.window &&
+					time - shifts.last < 1000 &&
+					time - shifts.first < 5000
+				) {
+					shifts.window += entry.value;
+				} else {
+					shifts.window = entry.value;
+					shifts.first = time;
+				}
+
+				shifts.last = time;
+				shifts.total += entry.value;
+				shifts.worst = Math.max( shifts.worst, shifts.window );
 			}
 		} ).observe( { type: 'layout-shift', buffered: true } );
 	} );
@@ -120,11 +142,15 @@ async function check( url ) {
 	await page.waitForTimeout( 8000 );
 
 	const scriptsAtLoad = scripts.length;
-	const height = await page.evaluate( () => document.body.scrollHeight );
+	const height = () =>
+		page.evaluate( () => document.documentElement.scrollHeight );
 
-	for ( let y = 0; y < height; y += 400 ) {
+	// The height is read again on every step, because rendered embeds and ads make
+	// the page longer as it scrolls. The step cap stops a page that never ends.
+	for ( let y = 0, step = 0; y < ( await height() ) && step < 250; step++ ) {
 		await page.evaluate( ( top ) => window.scrollTo( 0, top ), y );
 		await page.waitForTimeout( 350 );
+		y += 400;
 	}
 
 	await page.waitForTimeout( 4000 );
@@ -155,7 +181,8 @@ async function check( url ) {
 				tiktok: count( 'iframe[src*="tiktok.com"]' ),
 				pinterest: count( 'span[data-pin-href]' ),
 			},
-			cls: Math.round( window.__mpmCls * 1000 ) / 1000,
+			cls: Math.round( window.__mpmShifts.worst * 1000 ) / 1000,
+			shiftTotal: Math.round( window.__mpmShifts.total * 1000 ) / 1000,
 		};
 	} );
 
