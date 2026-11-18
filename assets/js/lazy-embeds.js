@@ -33,23 +33,31 @@
 		const networks = {
 			instagram: {
 				src: 'https://www.instagram.com/embed.js',
-				hidden: [ 'blockquote.instagram-media' ],
+				embeds: [
+					{
+						selector: 'blockquote.instagram-media',
+						className: 'instagram-media',
+					},
+				],
 				loaded: () => window.instgrm && window.instgrm.Embeds,
 				render: () => window.instgrm.Embeds.process(),
 			},
 			x: {
 				src: 'https://platform.twitter.com/widgets.js',
-				hidden: [
-					'blockquote.twitter-tweet',
-					'blockquote.twitter-video',
-				],
-				// Timelines and buttons keep their class. They only wait for the script.
-				kept: [
-					'a.twitter-timeline',
-					'a.twitter-follow-button',
-					'a.twitter-share-button',
-					'a.twitter-hashtag-button',
-					'a.twitter-mention-button',
+				embeds: [
+					{
+						selector: 'blockquote.twitter-tweet',
+						className: 'twitter-tweet',
+					},
+					{
+						selector: 'blockquote.twitter-video',
+						className: 'twitter-video',
+					},
+					// Timelines and buttons keep their class. They only wait for the script.
+					{
+						selector:
+							'a.twitter-timeline, a.twitter-follow-button, a.twitter-share-button, a.twitter-hashtag-button, a.twitter-mention-button',
+					},
 				],
 				// A tweet is slow to render and grows when it does, so at the resting margin
 				// a fast scroll reached it first and the page jumped. This was the smallest
@@ -67,14 +75,16 @@
 			},
 			tiktok: {
 				src: 'https://www.tiktok.com/embed.js',
-				// TikTok has no render call, so its script renders every embed when it loads.
-				kept: [ 'blockquote.tiktok-embed' ],
+				embeds: [ { selector: 'blockquote.tiktok-embed' } ],
 				loaded: () => false,
-				render: null,
+				// TikTok has no render call, so its script renders every embed when it loads.
+				render: () => {},
 			},
 			pinterest: {
 				src: 'https://assets.pinterest.com/js/pinit.js',
-				pins: 'a[data-pin-do]',
+				embeds: [
+					{ selector: 'a[data-pin-do]', attribute: 'data-pin-do' },
+				],
 				loaded: () => window.PinUtils && window.PinUtils.build,
 				// Builds the pins inside the element it is given. Not in Pinterest's docs,
 				// read from its pinit_main.js.
@@ -125,35 +135,37 @@
 			return;
 		}
 
-		// Each embed not shown yet: its network, and what to do when it nears the screen.
+		// Each embed not shown yet: its lead, if any, and what to do when it comes near.
 		const waiting = new Map();
 
 		// An X embed can be watched with two margins. Whichever observer sees it first
 		// shows it and takes it out of waiting, so the other finds nothing to do.
+		const reach = ( { isIntersecting, target }, observer ) => {
+			if ( ! isIntersecting ) {
+				return;
+			}
+
+			observer.unobserve( target );
+
+			const item = waiting.get( target );
+
+			if ( item ) {
+				waiting.delete( target );
+				item.show();
+			}
+		};
+
 		const observeWithin = ( margin ) => {
 			const observer = new window.IntersectionObserver(
-				( entries ) => {
+				( entries ) =>
 					entries.forEach( ( entry ) => {
 						// One embed that fails should not stop the rest.
 						try {
-							if ( ! entry.isIntersecting ) {
-								return;
-							}
-
-							observer.unobserve( entry.target );
-
-							const item = waiting.get( entry.target );
-
-							waiting.delete( entry.target );
-
-							if ( item ) {
-								item.show();
-							}
+							reach( entry, observer );
 						} catch ( error ) {
 							// That embed keeps its fallback.
 						}
-					} );
-				},
+					} ),
 				{ rootMargin: margin }
 			);
 
@@ -167,19 +179,13 @@
 		// Instagram's process() renders every match on the page, and embeds still
 		// waiting have no class, so they don't match.
 		const watch = ( name, embed, restore ) => {
-			const network = networks[ name ];
-
 			waiting.set( embed, {
-				name,
+				lead: networks[ name ].lead,
 				show: () => {
 					restore();
 
 					load( name )
-						.then( () => {
-							if ( network.render ) {
-								network.render( embed );
-							}
-						} )
+						.then( () => networks[ name ].render( embed ) )
 						.catch( () => {} );
 				},
 			} );
@@ -187,53 +193,49 @@
 			near.observe( embed );
 		};
 
-		delayed.forEach( ( name ) => {
-			const network = networks[ name ];
-
-			( network.hidden || [] ).forEach( ( selector ) => {
-				const className = selector.split( '.' )[ 1 ];
-
-				document.querySelectorAll( selector ).forEach( ( embed ) => {
-					embed.classList.remove( className );
-					// bin/check-embeds.mjs reads this to count embeds still waiting.
-					embed.setAttribute( 'data-mpm-embed', name );
-
-					watch( name, embed, () => {
-						embed.removeAttribute( 'data-mpm-embed' );
-						embed.classList.add( className );
-					} );
-				} );
-			} );
-
-			( network.kept || [] ).forEach( ( selector ) => {
-				document.querySelectorAll( selector ).forEach( ( embed ) => {
-					watch( name, embed, () => {} );
-				} );
-			} );
-
-			if ( network.pins ) {
-				document.querySelectorAll( network.pins ).forEach( ( pin ) => {
-					// bin/check-embeds.mjs reads this to count pins still waiting.
-					pin.setAttribute(
-						'data-mpm-pin-do',
-						pin.getAttribute( 'data-pin-do' )
-					);
-					pin.removeAttribute( 'data-pin-do' );
-
-					watch( name, pin, () => {
-						pin.setAttribute(
-							'data-pin-do',
-							pin.getAttribute( 'data-mpm-pin-do' )
-						);
-						pin.removeAttribute( 'data-mpm-pin-do' );
-					} );
-				} );
+		// Takes off the class or attribute the network's script looks for, so it can't
+		// render the embed early, and returns what puts it back. bin/check-embeds.mjs
+		// counts data-mpm-embed to find embeds still waiting.
+		const hide = ( embed, name, { className, attribute } ) => {
+			if ( ! className && ! attribute ) {
+				return () => {};
 			}
-		} );
 
-		const leading = delayed.filter( ( name ) => networks[ name ].lead );
+			const move = ( from, to ) => {
+				embed.setAttribute( to, embed.getAttribute( from ) );
+				embed.removeAttribute( from );
+			};
 
-		if ( ! leading.length ) {
+			embed.setAttribute( 'data-mpm-embed', name );
+
+			if ( attribute ) {
+				move( attribute, 'data-mpm-value' );
+			} else {
+				embed.classList.remove( className );
+			}
+
+			return () => {
+				embed.removeAttribute( 'data-mpm-embed' );
+
+				if ( attribute ) {
+					move( 'data-mpm-value', attribute );
+				} else {
+					embed.classList.add( className );
+				}
+			};
+		};
+
+		delayed.forEach( ( name ) =>
+			networks[ name ].embeds.forEach( ( kind ) =>
+				document
+					.querySelectorAll( kind.selector )
+					.forEach( ( embed ) =>
+						watch( name, embed, hide( embed, name, kind ) )
+					)
+			)
+		);
+
+		if ( ! delayed.some( ( name ) => networks[ name ].lead ) ) {
 			return;
 		}
 
@@ -255,14 +257,13 @@
 				scrolled.disconnect();
 				mark.remove();
 
-				leading.forEach( ( name ) => {
-					const early = observeWithin( networks[ name ].lead );
+				const early = {};
 
-					waiting.forEach( ( item, embed ) => {
-						if ( name === item.name ) {
-							early.observe( embed );
-						}
-					} );
+				waiting.forEach( ( { lead }, embed ) => {
+					if ( lead ) {
+						early[ lead ] = early[ lead ] || observeWithin( lead );
+						early[ lead ].observe( embed );
+					}
 				} );
 			} catch ( error ) {
 				// Those embeds still load at the resting margin.

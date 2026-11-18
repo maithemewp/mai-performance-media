@@ -35,31 +35,73 @@
  */
 /* eslint-disable no-console -- A command line check reports on the console. */
 import { readFileSync } from 'node:fs';
+import { parseArgs } from 'node:util';
 import { chromium } from 'playwright';
 
-const args = process.argv.slice( 2 );
-const blockAt = args.indexOf( '--block' );
-const blocked = new Set(
-	-1 === blockAt
-		? []
-		: JSON.parse( readFileSync( args.splice( blockAt, 2 )[ 1 ], 'utf8' ) )
-);
-const paceAt = args.indexOf( '--pace' );
-const pace = -1 === paceAt ? 700 : Number( args.splice( paceAt, 2 )[ 1 ] );
-const urls = args;
-
-if ( ! urls.length || ! ( pace > 0 ) ) {
+const usage = () => {
 	console.error(
 		'Usage: npm run check:embeds -- [--block <file>] [--pace <ms>] <url> [<url>...]'
 	);
 	process.exit( 2 );
+};
+
+let args;
+
+try {
+	args = parseArgs( {
+		options: {
+			block: { type: 'string' },
+			pace: { type: 'string', default: '700' },
+		},
+		allowPositionals: true,
+	} );
+} catch ( error ) {
+	usage();
+}
+
+const urls = args.positionals;
+const pace = Number( args.values.pace );
+const blocked = new Set(
+	args.values.block
+		? JSON.parse( readFileSync( args.values.block, 'utf8' ) )
+		: []
+);
+
+if ( ! urls.length || ! ( pace > 0 ) ) {
+	usage();
 }
 
 // Google's line for good layout shift.
 const CLS_LIMIT = 0.1;
 
-// The networks whose embeds have to render for a page to pass.
-const JUDGED = [ 'instagram', 'x' ];
+// Per network: what counts as an embed still showing its pasted fallback, whether
+// the loader hid it or gave it back and it never rendered, what counts as one the
+// network's script rendered, and whether one left unrendered fails the page.
+const NETWORKS = {
+	instagram: {
+		waiting: 'blockquote.instagram-media, [data-mpm-embed="instagram"]',
+		rendered: 'iframe.instagram-media',
+		judged: true,
+	},
+	x: {
+		waiting:
+			'blockquote.twitter-tweet, blockquote.twitter-video, [data-mpm-embed="x"]',
+		rendered: 'iframe[id^="twitter-widget"]',
+		judged: true,
+	},
+	// Expected: TikTok fills its blockquote with an iframe rather than replacing it.
+	// Not seen yet, since TikTok's library was down.
+	tiktok: {
+		waiting: 'blockquote.tiktok-embed:not(:has(iframe))',
+		rendered: 'iframe[src*="tiktok.com"]',
+		judged: false,
+	},
+	pinterest: {
+		waiting: 'a[data-pin-do], [data-mpm-embed="pinterest"]',
+		rendered: 'span[data-pin-href]',
+		judged: false,
+	},
+};
 
 // The network libraries, matched on the address without its query.
 const SCRIPTS =
@@ -187,40 +229,24 @@ async function check( url ) {
 
 		await page.waitForTimeout( 4000 );
 
-		const found = await page.evaluate( () => {
-			const count = ( selector ) =>
-				document.querySelectorAll( selector ).length;
+		const found = await page.evaluate( ( networks ) => {
+			// Each network's count of the elements one of its selectors matches.
+			const count = ( key ) =>
+				Object.fromEntries(
+					Object.entries( networks ).map( ( [ name, network ] ) => [
+						name,
+						document.querySelectorAll( network[ key ] ).length,
+					] )
+				);
 
 			return {
-				// A fallback the loader hid, or one given back that never rendered.
-				unrendered: {
-					instagram: count(
-						'blockquote.instagram-media, [data-mpm-embed="instagram"]'
-					),
-					x: count(
-						'blockquote.twitter-tweet, blockquote.twitter-video, [data-mpm-embed="x"]'
-					),
-					// Expected: TikTok fills its blockquote with an iframe rather than
-					// replacing it. Not seen yet, since TikTok's library was down.
-					tiktok: [
-						...document.querySelectorAll(
-							'blockquote.tiktok-embed'
-						),
-					].filter( ( embed ) => ! embed.querySelector( 'iframe' ) )
-						.length,
-					pinterest: count( 'a[data-pin-do], a[data-mpm-pin-do]' ),
-				},
-				rendered: {
-					instagram: count( 'iframe.instagram-media' ),
-					x: count( 'iframe[id^="twitter-widget"]' ),
-					tiktok: count( 'iframe[src*="tiktok.com"]' ),
-					pinterest: count( 'span[data-pin-href]' ),
-				},
+				unrendered: count( 'waiting' ),
+				rendered: count( 'rendered' ),
 				cls: Math.round( window.__mpmShifts.worst * 1000 ) / 1000,
 				shiftTotal:
 					Math.round( window.__mpmShifts.total * 1000 ) / 1000,
 			};
-		} );
+		}, NETWORKS );
 
 		return {
 			url,
@@ -244,7 +270,7 @@ async function check( url ) {
  */
 function failures( found ) {
 	const reasons = [];
-	const names = Object.keys( found.unrendered );
+	const names = Object.keys( NETWORKS );
 	const total = names.reduce(
 		( sum, name ) =>
 			sum + found.unrendered[ name ] + found.rendered[ name ],
@@ -257,10 +283,10 @@ function failures( found ) {
 
 	// One embed left as a fallback fails the page, so a network with embeds and
 	// none rendered fails too.
-	JUDGED.forEach( ( name ) => {
+	names.forEach( ( name ) => {
 		const left = found.unrendered[ name ];
 
-		if ( left ) {
+		if ( NETWORKS[ name ].judged && left ) {
 			reasons.push(
 				`${ name }: ${ left } of ${
 					left + found.rendered[ name ]
