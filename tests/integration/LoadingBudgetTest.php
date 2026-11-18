@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Mai\PerformanceImages\Tests\Integration;
+namespace Mai\PerformanceMedia\Tests\Integration;
 
-use Mai\PerformanceImages\LoadingBudget;
-use Mai\PerformanceImages\Tests\TestCase;
+use Mai\PerformanceMedia\LoadingBudget;
+use Mai\PerformanceMedia\Tests\TestCase;
 
 /**
  * The counting rules on their own.
@@ -22,7 +22,7 @@ final class LoadingBudgetTest extends TestCase {
 	}
 
 	public function test_the_eager_count_filter_changes_the_count_and_never_drops_below_one(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 0 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 0 );
 
 		$budget = new LoadingBudget();
 
@@ -32,7 +32,7 @@ final class LoadingBudgetTest extends TestCase {
 	}
 
 	public function test_a_chosen_lazy_image_does_not_spend_a_slot(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 3 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 3 );
 
 		$budget = new LoadingBudget();
 
@@ -74,7 +74,7 @@ final class LoadingBudgetTest extends TestCase {
 	}
 
 	public function test_the_high_spot_respects_the_core_pixel_filter(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 2 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 2 );
 		add_filter( 'wp_min_priority_img_pixels', fn() => 1000000 );
 
 		$budget = new LoadingBudget();

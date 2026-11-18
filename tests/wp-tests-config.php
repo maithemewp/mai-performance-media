@@ -9,7 +9,7 @@
 // roots/wordpress-no-content lands in vendor/<vendor>/<name> because it declares no installer plugin.
 define( 'ABSPATH', __DIR__ . '/vendor/roots/wordpress-no-content/' );
 
-define( 'DB_NAME', getenv( 'WP_TESTS_DB_NAME' ) ?: 'mai_performance_images_tests' );
+define( 'DB_NAME', getenv( 'WP_TESTS_DB_NAME' ) ?: 'mai_performance_media_tests' );
 define( 'DB_USER', getenv( 'WP_TESTS_DB_USER' ) ?: 'root' );
 define( 'DB_PASSWORD', getenv( 'WP_TESTS_DB_PASS' ) ?: '' );
 define( 'DB_HOST', getenv( 'WP_TESTS_DB_HOST' ) ?: '127.0.0.1' );
@@ -21,7 +21,7 @@ $table_prefix = 'wptests_';
 
 define( 'WP_TESTS_DOMAIN', 'example.org' );
 define( 'WP_TESTS_EMAIL', 'admin@example.org' );
-define( 'WP_TESTS_TITLE', 'Mai Performance Images Tests' );
+define( 'WP_TESTS_TITLE', 'Mai Performance Media Tests' );
 
 // Quoted, because Herd's PHP lives under "Application Support" and the bootstrap passes this to system() unquoted.
 define( 'WP_PHP_BINARY', escapeshellarg( PHP_BINARY ) );

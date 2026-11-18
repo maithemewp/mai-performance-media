@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Mai\PerformanceImages\Tests\Integration;
+namespace Mai\PerformanceMedia\Tests\Integration;
 
-use Mai\PerformanceImages\LoadingAttributes;
-use Mai\PerformanceImages\Tests\TestCase;
+use Mai\PerformanceMedia\LoadingAttributes;
+use Mai\PerformanceMedia\Tests\TestCase;
 
 /**
  * Iframes are left to WordPress, which only lazy loads one once enough images came

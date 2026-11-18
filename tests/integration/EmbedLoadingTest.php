@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Mai\PerformanceImages\Tests\Integration;
+namespace Mai\PerformanceMedia\Tests\Integration;
 
-use Mai\PerformanceImages\EmbedLoading;
-use Mai\PerformanceImages\Tests\TestCase;
+use Mai\PerformanceMedia\EmbedLoading;
+use Mai\PerformanceMedia\Tests\TestCase;
 
 /**
  * Embed scripts are delayed on the finished page, and one loader is added to start

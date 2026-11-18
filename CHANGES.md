@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.0 (11/17/26)
+
+### Added
+
+- **Social embeds load as readers scroll to them.** Instagram, X, TikTok and Pinterest each load a heavy script that blocks the page, even for an embed far below the top. The plugin now holds each script back and loads it when its first embed comes within 200px of the screen. X is the exception: once the reader starts scrolling it loads from 1600px away, because a tweet is slow to render and grows after it does, and a closer start let fast scrolling jump the page. Until then an embed is plain text and a link. `mai_performance_media_lazy_embeds` turns it off.
+
+### Changed
+
+- **The plugin is now Mai Performance Media.** The slug changes from `mai-performance-images` to `mai-performance-media`, and so do the text domain, the namespace and the two filters, which are now `mai_performance_media_eager_count` and `mai_performance_media_entry_loading`. Saved settings carry over untouched, since Image Loading is stored under the same names as before. A site has to install the new plugin, switch to it and delete the old one. The old one won't update itself.
+
+### Removed
+
+- **The one-time cleanup of WebP conversion and the old settings page.** It was forced across every site before this release, so the code is gone.
+
 ## 0.9.1 (10/30/26)
 
 ### Fixed

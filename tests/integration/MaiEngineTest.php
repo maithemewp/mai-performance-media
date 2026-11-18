@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Mai\PerformanceImages\Tests\Integration;
+namespace Mai\PerformanceMedia\Tests\Integration;
 
-use Mai\PerformanceImages\MaiEngine;
-use Mai\PerformanceImages\Tests\TestCase;
-use function Mai\PerformanceImages\add_mai_engine_support;
+use Mai\PerformanceMedia\MaiEngine;
+use Mai\PerformanceMedia\Tests\TestCase;
+use function Mai\PerformanceMedia\add_mai_engine_support;
 
 /**
  * The wiring into Mai Engine, with a stand-in Mai_Engine class from tests/stubs.php.
@@ -17,7 +17,7 @@ final class MaiEngineTest extends TestCase {
 		add_mai_engine_support();
 
 		do_action( 'mai_before_entry', null, [ 'image_loading' => 'lazy' ] );
-		$loading = apply_filters( 'mai_performance_images_entry_loading', '', [] );
+		$loading = apply_filters( 'mai_performance_media_entry_loading', '', [] );
 		do_action( 'mai_after_entry', null, [] );
 
 		$this->assertSame( 'lazy', $loading );

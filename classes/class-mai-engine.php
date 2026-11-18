@@ -1,6 +1,6 @@
 <?php
 
-namespace Mai\PerformanceImages;
+namespace Mai\PerformanceMedia;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -50,13 +50,13 @@ class MaiEngine {
 			$new = [
 				[
 					'settings'       => 'image_loading',
-					'label'          => esc_html__( 'Image Loading', 'mai-performance-images' ),
+					'label'          => esc_html__( 'Image Loading', 'mai-performance-media' ),
 					'type'           => 'select',
 					'default'        => '',
 					'choices'        => [
-						''      => esc_html__( 'Automatic', 'mai-performance-images' ),
-						'lazy'  => esc_html__( 'Lazy (loads when scrolled near)', 'mai-performance-images' ),
-						'eager' => esc_html__( 'Eager (loads right away)', 'mai-performance-images' ),
+						''      => esc_html__( 'Automatic', 'mai-performance-media' ),
+						'lazy'  => esc_html__( 'Lazy (loads when scrolled near)', 'mai-performance-media' ),
+						'eager' => esc_html__( 'Eager (loads right away)', 'mai-performance-media' ),
 					],
 					'active_callback' => [
 						[
@@ -68,8 +68,8 @@ class MaiEngine {
 				],
 				[
 					'settings'        => 'image_loading_count',
-					'label'           => esc_html__( 'Image Loading Count', 'mai-performance-images' ),
-					'description'     => esc_html__( 'How many entries load their image right away. The rest load as visitors scroll. Leave empty to load them all right away.', 'mai-performance-images' ),
+					'label'           => esc_html__( 'Image Loading Count', 'mai-performance-media' ),
+					'description'     => esc_html__( 'How many entries load their image right away. The rest load as visitors scroll. Leave empty to load them all right away.', 'mai-performance-media' ),
 					'type'            => 'text',
 					'sanitize'        => 'absint',
 					'default'         => '',
@@ -120,13 +120,13 @@ class MaiEngine {
 			$new = [
 				[
 					'settings'       => 'image_loading',
-					'label'          => esc_html__( 'Image Loading', 'mai-performance-images' ),
+					'label'          => esc_html__( 'Image Loading', 'mai-performance-media' ),
 					'type'           => 'select',
 					'default'        => '',
 					'choices'        => [
-						''      => esc_html__( 'Automatic', 'mai-performance-images' ),
-						'lazy'  => esc_html__( 'Lazy (loads when scrolled near)', 'mai-performance-images' ),
-						'eager' => esc_html__( 'Eager (loads right away)', 'mai-performance-images' ),
+						''      => esc_html__( 'Automatic', 'mai-performance-media' ),
+						'lazy'  => esc_html__( 'Lazy (loads when scrolled near)', 'mai-performance-media' ),
+						'eager' => esc_html__( 'Eager (loads right away)', 'mai-performance-media' ),
 					],
 					'active_callback' => [
 						[
@@ -164,11 +164,11 @@ class MaiEngine {
 		/** @disregard P1010 */
 		\acf_add_local_field_group(
 			[
-				'key'   => 'mai_performance_images_grid_block_field_group',
-				'title' => esc_html__( 'Mai Performance Images', 'mai-performance-images' ),
+				'key'   => 'mai_performance_media_grid_block_field_group',
+				'title' => esc_html__( 'Mai Performance Media', 'mai-performance-media' ),
 				'fields' => [
 					[
-						'label'        => __( 'Mai Performance Images', 'mai-performance-images' ),
+						'label'        => __( 'Mai Performance Media', 'mai-performance-media' ),
 						'key'          => 'field_63f9a2b4c8d1e',
 						'type'         => 'accordion',
 						'open'         => 0,
@@ -178,12 +178,12 @@ class MaiEngine {
 					[
 						'key'     => 'field_63f9a2b4c8d2e',
 						'name'    => 'image_loading',
-						'label'   => esc_html__( 'Image Loading', 'mai-performance-images' ),
+						'label'   => esc_html__( 'Image Loading', 'mai-performance-media' ),
 						'type'    => 'select',
 						'choices' => [
-							''      => esc_html__( 'Automatic', 'mai-performance-images' ),
-							'lazy'  => esc_html__( 'Lazy (loads when scrolled near)', 'mai-performance-images' ),
-							'eager' => esc_html__( 'Eager (loads right away)', 'mai-performance-images' ),
+							''      => esc_html__( 'Automatic', 'mai-performance-media' ),
+							'lazy'  => esc_html__( 'Lazy (loads when scrolled near)', 'mai-performance-media' ),
+							'eager' => esc_html__( 'Eager (loads right away)', 'mai-performance-media' ),
 						],
 						'conditional_logic' => [
 							[
@@ -196,8 +196,8 @@ class MaiEngine {
 					[
 						'key'               => 'field_63f9a2b4c8d3e',
 						'name'              => 'image_loading_count',
-						'label'             => esc_html__( 'Image Loading Count', 'mai-performance-images' ),
-						'instructions'      => esc_html__( 'How many entries load their image right away. The rest load as visitors scroll. Leave empty to load them all right away.', 'mai-performance-images' ),
+						'label'             => esc_html__( 'Image Loading Count', 'mai-performance-media' ),
+						'instructions'      => esc_html__( 'How many entries load their image right away. The rest load as visitors scroll. Leave empty to load them all right away.', 'mai-performance-media' ),
 						'type'              => 'number',
 						'conditional_logic' => [
 							[

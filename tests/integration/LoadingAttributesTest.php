@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Mai\PerformanceImages\Tests\Integration;
+namespace Mai\PerformanceMedia\Tests\Integration;
 
-use Mai\PerformanceImages\LoadingAttributes;
-use Mai\PerformanceImages\Tests\TestCase;
+use Mai\PerformanceMedia\LoadingAttributes;
+use Mai\PerformanceMedia\Tests\TestCase;
 
 /**
  * Which images load right away, decided once on the finished page.
@@ -71,7 +71,7 @@ final class LoadingAttributesTest extends TestCase {
 	}
 
 	public function test_an_ad_low_in_the_content_waits_its_turn(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 2 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 2 );
 
 		$html = $this->page( fn() => $this->the_content( $this->static_image( 1 ) . '[mpi_ad]' . $this->static_image( 2 ) . $this->static_image( 3 ) ) );
 
@@ -291,7 +291,7 @@ final class LoadingAttributesTest extends TestCase {
 	}
 
 	public function test_the_eager_count_filter_changes_how_many_load_right_away(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 2 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 2 );
 
 		$html = $this->filter_page( $this->static_image( 1 ) . $this->static_image( 2 ) . $this->static_image( 3 ) );
 
@@ -338,7 +338,7 @@ final class LoadingAttributesTest extends TestCase {
 	}
 
 	public function test_content_mai_publisher_inserts_later_lazy_loads(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 3 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 3 );
 
 		$publisher = new \Mai_Publisher_Output();
 
@@ -677,7 +677,7 @@ final class LoadingAttributesTest extends TestCase {
 	}
 
 	public function test_with_a_count_of_three_a_logo_below_the_last_image_lazy_loads(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 3 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 3 );
 
 		$html = $this->filter_page( $this->logo() . $this->static_image( 1 ) . $this->logo() );
 
@@ -706,7 +706,7 @@ final class LoadingAttributesTest extends TestCase {
 	}
 
 	public function test_with_a_count_of_two_an_icon_between_the_two_spots_loads_right_away(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 2 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 2 );
 
 		$html = $this->filter_page( $this->logo() . $this->static_image( 1 ) . $this->small_image( 1 ) . $this->static_image( 2 ) . $this->static_image( 3 ) . $this->logo() );
 
@@ -715,7 +715,7 @@ final class LoadingAttributesTest extends TestCase {
 	}
 
 	public function test_with_a_count_of_three_nine_icons_and_an_image_marked_high_use_every_bookmark_safely(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 3 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 3 );
 
 		$smalls = implode( '', array_map( fn( $n ) => $this->small_image( $n ), range( 1, 9 ) ) );
 		$html   = $this->filter_page( $this->static_image( 1 ) . $smalls . $this->static_image( 2, 'fetchpriority="high"' ) . $this->static_image( 3 ) );
@@ -724,7 +724,7 @@ final class LoadingAttributesTest extends TestCase {
 	}
 
 	public function test_with_a_count_of_three_a_low_logo_below_the_last_image_keeps_low(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 3 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 3 );
 
 		$html = $this->filter_page( $this->static_image( 1 ) . $this->logo( 'fetchpriority="low"' ) );
 

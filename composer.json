@@ -1,5 +1,5 @@
 {
-    "name": "maitheme/mai-performance-images",
+    "name": "maithemewp/mai-performance-media",
     "description": "Loads the first images on each page right away and lazy loads the rest.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
@@ -24,7 +24,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Mai\\PerformanceImages\\": "classes/"
+            "Mai\\PerformanceMedia\\": "classes/"
         },
         "classmap": [
             "classes/"

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mai\PerformanceImages;
+namespace Mai\PerformanceMedia;
 
 use WP_HTML_Tag_Processor;
 

@@ -6,5 +6,5 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Mai\\PerformanceImages\\' => array($baseDir . '/classes'),
+    'Mai\\PerformanceMedia\\' => array($baseDir . '/classes'),
 );

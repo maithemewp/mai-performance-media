@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    WordPress-loaded suite. Needs MySQL and a mai_performance_images_tests database. See README.md.
+    WordPress-loaded suite. Needs MySQL and a mai_performance_media_tests database. See README.md.
 -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"

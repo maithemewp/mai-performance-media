@@ -1,6 +1,6 @@
 <?php
 
-namespace Mai\PerformanceImages;
+namespace Mai\PerformanceMedia;
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
@@ -32,7 +32,7 @@ class Updater {
 	 * @return void
 	 */
 	public function init() {
-		$updater = PucFactory::buildUpdateChecker( 'https://github.com/maithemewp/mai-performance-images/', plugin_dir_path(__DIR__) . 'mai-performance-images.php', 'mai-performance-images' );
+		$updater = PucFactory::buildUpdateChecker( 'https://github.com/maithemewp/mai-performance-media/', plugin_dir_path(__DIR__) . 'mai-performance-media.php', 'mai-performance-media' );
 		$updater->setBranch( 'main' );
 
 		// Maybe set github api token.

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mai\PerformanceImages;
+namespace Mai\PerformanceMedia;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -341,7 +341,7 @@ final class LoadingBudget {
 		 *
 		 * @param int $count The number of images.
 		 */
-		$this->eager_count = max( 1, (int) apply_filters( 'mai_performance_images_eager_count', $default ) );
+		$this->eager_count = max( 1, (int) apply_filters( 'mai_performance_media_eager_count', $default ) );
 
 		return $this->eager_count;
 	}

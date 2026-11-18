@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Mai\PerformanceImages;
+namespace Mai\PerformanceMedia;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) exit;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Mai\PerformanceImages\Tests;
+namespace Mai\PerformanceMedia\Tests;
 
-use Mai\PerformanceImages\EmbedLoading;
-use Mai\PerformanceImages\LoadingAttributes;
+use Mai\PerformanceMedia\EmbedLoading;
+use Mai\PerformanceMedia\LoadingAttributes;
 use WP_UnitTestCase;
 
 /**

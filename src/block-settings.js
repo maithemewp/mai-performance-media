@@ -68,15 +68,15 @@ addFilter(
 				<InspectorControls>
 					<div style={{ padding: '0px 16px 8px' }}>
 						<SelectControl
-							label={__('Image Loading', 'mai-performance-images')}
+							label={__('Image Loading', 'mai-performance-media')}
 							value={attributes.imgLoading || ''}
 							options={[
-								{ label: __('Automatic', 'mai-performance-images'), value: '' },
-								{ label: __('Lazy (loads when scrolled near)', 'mai-performance-images'), value: 'lazy' },
-								{ label: __('Eager (loads right away)', 'mai-performance-images'), value: 'eager' },
+								{ label: __('Automatic', 'mai-performance-media'), value: '' },
+								{ label: __('Lazy (loads when scrolled near)', 'mai-performance-media'), value: 'lazy' },
+								{ label: __('Eager (loads right away)', 'mai-performance-media'), value: 'eager' },
 							]}
 							onChange={(value) => setAttributes({ imgLoading: value })}
-							help={__('Controls how the browser loads this image.', 'mai-performance-images')}
+							help={__('Controls how the browser loads this image.', 'mai-performance-media')}
 						/>
 					</div>
 				</InspectorControls>

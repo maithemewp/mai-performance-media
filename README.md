@@ -1,6 +1,6 @@
-# Mai Performance Images
+# Mai Performance Media
 
-Decides which images on a page load right away and which ones wait until the visitor scrolls near them.
+Decides which images on a page load right away and which ones wait until the visitor scrolls near them. It also holds back the scripts of social embeds until a reader scrolls near them.
 
 WordPress already does this, but it guesses from the file size. A logo uploaded large for retina screens can take the top spot from the article's main image. This plugin knows a logo from an entry image from an avatar, and it knows the Image Loading settings of the archive, post or grid being shown.
 
@@ -26,6 +26,10 @@ Some responses never reach that point: the REST API, feeds, Ajax, the admin, and
 
 On sites running Mai Publisher, ads and sidebar content are added to the page after WordPress's step. The page is still decided at WordPress's step. Images Mai Publisher adds afterwards lazy load, at its `mai_publisher_html` filter.
 
+## Embeds
+
+Instagram, X, TikTok and Pinterest embeds each load a script that is heavy and blocks the page. The plugin holds those scripts back and loads each one as its first embed nears the screen. Embeds sit in the page as plain markup until then. The loader starts a script 200px before an embed reaches the screen. X starts from 1600px away once the reader begins scrolling, because a tweet is slow to render and grows after it does.
+
 ## Settings
 
 The plugin has no settings page. It works as soon as it's active. Deactivate it and WordPress decides loading on its own again.
@@ -43,27 +47,31 @@ Once any image on a page is set to Eager, images left on Automatic lazy load. A 
 
 ## Filters
 
-`mai_performance_images_eager_count` sets how many images load right away. The default is 1. Small images and logos above the last of them still load right away.
+`mai_performance_media_eager_count` sets how many images load right away. The default is 1. Small images and logos above the last of them still load right away.
 
 ```php
-add_filter( 'mai_performance_images_eager_count', function( $count ) {
+add_filter( 'mai_performance_media_eager_count', function( $count ) {
 	return 3;
 } );
 ```
 
-`mai_performance_images_entry_loading` answers for a Mai entry's image. Return `'lazy'` or `'eager'` to choose, or leave it empty.
+`mai_performance_media_lazy_embeds` turns the embed delay on or off. Return `false` to load embed scripts the usual way.
 
 ```php
-add_filter( 'mai_performance_images_entry_loading', function( $loading, $attr ) {
+add_filter( 'mai_performance_media_lazy_embeds', '__return_false' );
+```
+
+`mai_performance_media_entry_loading` answers for a Mai entry's image. Return `'lazy'` or `'eager'` to choose, or leave it empty.
+
+```php
+add_filter( 'mai_performance_media_entry_loading', function( $loading, $attr ) {
 	return is_front_page() ? 'eager' : $loading;
 }, 10, 2 );
 ```
 
 ## WebP conversion was removed in 0.7.0
 
-Earlier versions could resize images and convert them to WebP on the fly. Cloudflare does that job now, so it's gone. After updating, the plugin deletes the old conversion's scheduled jobs and queue once.
-
-The converted files in `wp-content/uploads/mai-performance-images` stay put, because pages already held in a page cache or on a CDN may still point to them. Delete that folder once those caches have cleared.
+Earlier versions could resize images and convert them to WebP on the fly. Cloudflare does that job now, so it's gone. Converted files it left in the uploads folder can be deleted once page caches and CDNs have cleared.
 
 ## Requirements
 
@@ -77,6 +85,6 @@ composer test-setup
 composer test
 ```
 
-The tests load WordPress and need MySQL with an empty `mai_performance_images_tests` database. Set `WP_TESTS_DB_NAME`, `WP_TESTS_DB_USER`, `WP_TESTS_DB_PASS` or `WP_TESTS_DB_HOST` to use a different one.
+The tests load WordPress and need MySQL with an empty `mai_performance_media_tests` database. Set `WP_TESTS_DB_NAME`, `WP_TESTS_DB_USER`, `WP_TESTS_DB_PASS` or `WP_TESTS_DB_HOST` to use a different one.
 
 Edit block editor code in `src/` and build it with `npm run build`. The built files in `build/` are committed.

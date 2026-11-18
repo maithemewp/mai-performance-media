@@ -1,12 +1,12 @@
 <?php
 
-namespace Mai\PerformanceImages;
+namespace Mai\PerformanceMedia;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
- * Mai Performance Images Image Loading class.
+ * Mai Performance Media Image Loading class.
  *
  * @since 0.1.0
  */
@@ -50,7 +50,7 @@ final class ImageLoading {
 		$asset_file = include( dirname( __DIR__ ) . '/build/block-settings.asset.php' );
 
 		wp_enqueue_script(
-			'mai-performance-images-block-settings',
+			'mai-performance-media-block-settings',
 			plugins_url( 'build/block-settings.js', dirname( __FILE__ ) ),
 			$asset_file['dependencies'],
 			$asset_file['version']

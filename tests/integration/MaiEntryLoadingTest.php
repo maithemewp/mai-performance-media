@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Mai\PerformanceImages\Tests\Integration;
+namespace Mai\PerformanceMedia\Tests\Integration;
 
-use Mai\PerformanceImages\MaiEntryLoading;
-use Mai\PerformanceImages\Tests\TestCase;
+use Mai\PerformanceMedia\MaiEntryLoading;
+use Mai\PerformanceMedia\Tests\TestCase;
 
 /**
  * The Image Loading settings on Mai archives, singles and grids.

@@ -1,6 +1,6 @@
 {
-  "name": "maithemewp/mai-performance-images-tests",
-  "description": "Test-only dependencies for mai-performance-images. Installed into tests/vendor/ so the plugin's committed vendor/ autoloader is never regenerated with dev entries. wp-phpunit and roots/wordpress-no-content track together; move them only via `composer update -d tests`.",
+  "name": "maithemewp/mai-performance-media-tests",
+  "description": "Test-only dependencies for mai-performance-media. Installed into tests/vendor/ so the plugin's committed vendor/ autoloader is never regenerated with dev entries. wp-phpunit and roots/wordpress-no-content track together; move them only via `composer update -d tests`.",
   "license": "GPL-2.0-or-later",
   "require": {
     "php": "^8.1",
@@ -11,8 +11,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Mai\\PerformanceImages\\Tests\\Integration\\": "integration/",
-      "Mai\\PerformanceImages\\Tests\\": ""
+      "Mai\\PerformanceMedia\\Tests\\Integration\\": "integration/",
+      "Mai\\PerformanceMedia\\Tests\\": ""
     }
   },
   "minimum-stability": "stable",

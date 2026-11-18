@@ -7,13 +7,13 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
-    'Mai\\PerformanceImages\\EmbedLoading' => $baseDir . '/classes/class-embed-loading.php',
-    'Mai\\PerformanceImages\\EmbedNetwork' => $baseDir . '/classes/enum-embed-network.php',
-    'Mai\\PerformanceImages\\ImageLoading' => $baseDir . '/classes/class-image-loading.php',
-    'Mai\\PerformanceImages\\LoadingAttributes' => $baseDir . '/classes/class-loading-attributes.php',
-    'Mai\\PerformanceImages\\LoadingBudget' => $baseDir . '/classes/class-loading-budget.php',
-    'Mai\\PerformanceImages\\MaiBlocks' => $baseDir . '/classes/class-mai-blocks.php',
-    'Mai\\PerformanceImages\\MaiEngine' => $baseDir . '/classes/class-mai-engine.php',
-    'Mai\\PerformanceImages\\MaiEntryLoading' => $baseDir . '/classes/class-mai-entry-loading.php',
-    'Mai\\PerformanceImages\\Updater' => $baseDir . '/classes/class-updater.php',
+    'Mai\\PerformanceMedia\\EmbedLoading' => $baseDir . '/classes/class-embed-loading.php',
+    'Mai\\PerformanceMedia\\EmbedNetwork' => $baseDir . '/classes/enum-embed-network.php',
+    'Mai\\PerformanceMedia\\ImageLoading' => $baseDir . '/classes/class-image-loading.php',
+    'Mai\\PerformanceMedia\\LoadingAttributes' => $baseDir . '/classes/class-loading-attributes.php',
+    'Mai\\PerformanceMedia\\LoadingBudget' => $baseDir . '/classes/class-loading-budget.php',
+    'Mai\\PerformanceMedia\\MaiBlocks' => $baseDir . '/classes/class-mai-blocks.php',
+    'Mai\\PerformanceMedia\\MaiEngine' => $baseDir . '/classes/class-mai-engine.php',
+    'Mai\\PerformanceMedia\\MaiEntryLoading' => $baseDir . '/classes/class-mai-entry-loading.php',
+    'Mai\\PerformanceMedia\\Updater' => $baseDir . '/classes/class-updater.php',
 );

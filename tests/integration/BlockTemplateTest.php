@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Mai\PerformanceImages\Tests\Integration;
+namespace Mai\PerformanceMedia\Tests\Integration;
 
-use Mai\PerformanceImages\Tests\TestCase;
+use Mai\PerformanceMedia\Tests\TestCase;
 
 /**
  * Which images load right away on a block theme page, built from a block template.
@@ -125,7 +125,7 @@ final class BlockTemplateTest extends TestCase {
 	}
 
 	public function test_lazy_gallery_images_stay_lazy_and_spend_nothing(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 3 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 3 );
 
 		$lazy    = fn( $n ) => '<!-- wp:image {"imgLoading":"lazy"} --><figure class="wp-block-image">' . $this->static_image( $n ) . '</figure><!-- /wp:image -->';
 		$gallery = '<!-- wp:gallery --><figure class="wp-block-gallery has-nested-images">' . $lazy( 1 ) . $lazy( 2 ) . '</figure><!-- /wp:gallery -->';
@@ -136,7 +136,7 @@ final class BlockTemplateTest extends TestCase {
 	}
 
 	public function test_a_thumbnail_built_lazy_stays_lazy_and_spends_nothing(): void {
-		add_filter( 'mai_performance_images_eager_count', fn() => 3 );
+		add_filter( 'mai_performance_media_eager_count', fn() => 3 );
 
 		$post = $this->create_post( '<!-- wp:mpi-test/lazy-thumbnails /-->' . $this->static_image( 1 ) . $this->static_image( 2 ) );
 		$html = $this->render( $post, '<!-- wp:post-featured-image /--><!-- wp:post-content /-->' );

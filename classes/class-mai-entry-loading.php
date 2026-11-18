@@ -1,6 +1,6 @@
 <?php
 
-namespace Mai\PerformanceImages;
+namespace Mai\PerformanceMedia;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -49,7 +49,7 @@ final class MaiEntryLoading {
 		add_filter( 'genesis_markup_entries_close',         [ $this, 'close_loop' ], 10, 2 );
 		add_action( 'mai_before_entry',                     [ $this, 'open_entry' ], 10, 2 );
 		add_action( 'mai_after_entry',                      [ $this, 'close_entry' ], 10, 0 );
-		add_filter( 'mai_performance_images_entry_loading', [ $this, 'get_loading' ], 10, 1 );
+		add_filter( 'mai_performance_media_entry_loading', [ $this, 'get_loading' ], 10, 1 );
 	}
 
 	/**

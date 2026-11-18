@@ -2,47 +2,37 @@
 Updated: November 17, 2026 by Claude
 
 ## Now
-Next release is 1.0.0, Mai Performance Media: social embed scripts (Instagram, X, TikTok, Pinterest) load as each embed nears the screen, and the plugin and its GitHub repo are renamed. Spec: `docs/specs/2026-11-17-lazy-embeds.md`. Plan: `docs/plans/2026-11-17-lazy-embeds.md`. Nothing built yet. A throwaway spike measured it on six local copies; its scripts are in `~/Plugins/_wip/mpi-embed-spike/`, outside the repo.
+1.0.0, Mai Performance Media, is committed locally on `develop`. Nothing is pushed, tagged or renamed on GitHub. Spec: `docs/specs/2026-11-17-lazy-embeds.md`. Plan: `docs/plans/2026-11-17-lazy-embeds.md`.
 
-On November 17 the old 0.7.0 and 0.9.0 cleanup was forced on every site with `mai-sites run` and rechecked clean, so 1.0.0 drops that code.
+What 1.0.0 holds:
+- Instagram, X, TikTok and Pinterest embed scripts are delayed and each loads as its first embed nears the screen (`classes/class-embed-loading.php`, `assets/js/lazy-embeds.js`). Filter `mai_performance_media_lazy_embeds` turns it off.
+- Loader margins: 200px for every network at rest, and X also from 1600px once the reader starts scrolling. The margin study: at 200px alone, fast-scroll CLS had a median of 0.166 on 8 X posts. With the split, no sampled post loaded a script at page load, and at the check's default 700ms pace every check scored cls 0.
+- The plugin is renamed: namespace `Mai\PerformanceMedia`, main file `mai-performance-media.php`, slug and text domain `mai-performance-media`, filters `mai_performance_media_*`. The folder and GitHub repo keep the old name for now.
+- The 0.7.0 and 0.9.0 cleanup code is gone, since both were forced on every site and rechecked clean.
+- Kept on purpose: `data-mpi-loading`, the `?mpi=` cache-buster, the `imgLoading` block attribute, the `image_loading` and `image_loading_count` settings, and every `field_63f9...` ACF key.
 
-0.9.1 is released (October 30): WordPress counts each image again, so iframes such as YouTube and Vimeo embeds below the main images lazy load. `count_like_wordpress()` runs core's `wp_get_loading_optimization_attributes()` with the plugin's answer held back and restores the high priority flag. Tests: `tests/integration/IframeLoadingTest.php`, which compares against WordPress alone.
-
-0.9.0 is released (October 23): the Settings > Performance Images page is gone. Its one checkbox turned the whole plugin off, the same as deactivating it. On October 23 none of the 58 sites with the plugin active had it off (34 saved on, 24 never saved). `remove_settings_leftovers()` deletes the `mai_performance_images` option on the next admin visit.
-
-0.8.0 is released (tag 0.8.0, `main` at e5449b8, October 14). The 27 sites in the git-ignored `mai-sites.json` were pushed 0.8.0 by hand and all boot on it. The other 33 sites were on 0.7.0 and should get 0.8.0 from the updater.
-
-How it decides:
-- If any image on the page is set to Eager (block Image Loading, Mai Customizer archive or single settings, Mai grid settings), only those load right away and the first gets high priority. Big images left on Automatic lazy load.
-- A Mai page header image (`page-header-image` class) counts as Eager automatically, and skips the 50,000 square pixel floor for high priority.
-- With nothing set to Eager, one image loads right away: the first of at least 50,000 square pixels, with high priority. `mai_performance_images_eager_count` changes the count.
-- Logos and small images (under 50,000 square pixels) load right away with `fetchpriority="auto"` while a slot is free, so above the main image, and lazy load after. With no image big enough, the first small image takes the slot, else the first logo stands in.
-- Avatars lazy load. Images 2x2 or smaller are left alone.
-- Mai Publisher inserts content after the page is decided. Those images lazy load, on its `mai_publisher_html` filter.
-
-Spec: `docs/specs/2026-10-14-one-main-image.md`. Plan: `docs/plans/2026-10-14-one-main-image.md`.
+How images are decided is unchanged since 0.9.1. See `docs/specs/2026-10-14-one-main-image.md`.
 
 ## Next
-- Build the plan in a fresh session. Stop before any push, tag or GitHub repo rename.
-- Settings audit, October 14 (`/tmp/mpi-audit.sh` and `/tmp/mpi-analyze.php`, gone after a reboot): fixed eurweb's and mynorth's extra Eager home page grids, Eager archive counts over 1 on mynorth, verilymag and insidetailgating, and wnbatake's menu icons (its theme now passes `fetchpriority="auto"`). Left alone: 50 harmless leftovers that act like Automatic, and the dev copies.
-- Check in a few days that the 0.7.0 sites updated: `mai-sites plugins list mai-performance-images`. 23 sites never updated past 0.2.0 to 0.6.0, and nobody knows why. Find the cause if the 0.7.0 sites don't move either.
+- Task 4: Lighthouse comparison before release, on two sites, ads blocked, simulated and real throttling.
+- Task 5: the runbook in `docs/runbooks/` for swapping each site to the new plugin one at a time.
+- Rename the GitHub repo and the local folder by hand, then push and tag 1.0.0 only when asked.
+- Update outside the repo once it ships: the `bizbudding-two` theme plugin list, client `setup/design.json` lists, and the two skills that name the plugin.
 - Remove the `mai_publisher_html` late pass once https://github.com/bizbudding/mai-publisher/issues/62 lands.
 - Check mai-content-areas on real block theme content.
-- Later, maybe: move this into Mai Engine once it proves out on real sites.
 
 ## Blocked / waiting on
 - Nothing.
 
 ## Verify
-- `composer test` (132 tests). Walk speed has no automated check; rerun the timing below after changing the walk.
-- Every local Herd site with the plugin uses the symlink, since October 23. List images with `curl -sk` plus a `?mpi=<random>` query, because a page cache such as WP Rocket serves cached pages otherwise. Expect one `fetchpriority="high"`, logos above it eager, footer logos lazy, no `data-mpi-loading`.
-- Walk time on the sw Stories archive (200 KB, 26 images) is 3.9 ms per page, the same as before the change. A two-pass version measured 6.4 ms and was dropped.
-- Mobile Lighthouse on the local eurweb News archive, 5 alternating runs each, October 14: 0.7.0 median score 71 and LCP 4.9 s; 0.8.0 median 76 and 4.3 s. 0.8.0 won 3 of 5 pairs, and the spread between runs (3.3 to 8.4 s) is bigger than the gap, so it's no worse, but not a proven win on this page. The LCP image was the first entry in every run.
+- `composer test` and `npx wp-scripts lint-js`. The test database is `mai_performance_media_tests`.
+- Fetch a page with `curl -sk` plus a `?mpi=<random>` query, because a page cache serves cached pages otherwise. Expect `id="mai-performance-media-lazy-embeds"` on a page with embeds and exactly one `fetchpriority="high"`.
+- Local Herd sites use a symlink to this folder named `mai-performance-media`.
 
 ## Gotchas
-- Parallel `mai-sites run` WP-CLI commands hit database connection errors on one shared server; run that server one site at a time.
-- TikTok's embeds were broken on TikTok's side on November 17 (its library returned 404), so TikTok rendering after a delayed load is unverified.
-- grandstrandlocal.com resolves to 162.255.119.197 and didn't answer on October 14, so its pages couldn't be checked. dogwheelchairlife.com redirects every visit to dogdiscoveries.com/mobility/.
-- The walk keeps at most 8 logos or small images waiting for a slot below them, because the tag processor allows 10 bookmarks. Past 8, the rest above the main image lazy load.
-- sw.doyouremember.com: Cloudflare blocks curl. Fetch with headless Chromium, a normal user agent, and basic auth doyouremember/doyouremember.
-- Requests that never reach the page buffer (REST, feeds, Ajax) are left to WordPress, plus the editor's and Mai entry's choices. WordPress uses its own count of 3 there.
+- Parallel `mai-sites run` WP-CLI commands hit database connection errors on one shared server. Run each server one site at a time.
+- TikTok's embeds were broken on TikTok's side on November 17, so TikTok rendering after a delayed load is unverified.
+- Pinterest renders only in a real browser. Check it in background Chrome, never in front.
+- A site the swap misses gets no warning: the updater only offers an update to a main file with the installed name, so an old install stays on 0.9.1.
+- The walk keeps at most 8 logos or small images waiting for a slot below them, because the tag processor allows 10 bookmarks.
+- Requests that never reach the page buffer (REST, feeds, Ajax) are left to WordPress, plus the editor's and Mai entry's choices.

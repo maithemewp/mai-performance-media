@@ -1,6 +1,6 @@
 <?php
 
-namespace Mai\PerformanceImages;
+namespace Mai\PerformanceMedia;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -980,7 +980,7 @@ final class LoadingAttributes {
 		 * @param string $loading Empty by default. Return 'lazy' or 'eager' to choose.
 		 * @param array  $attr    The attributes for the tag.
 		 */
-		$loading = (string) apply_filters( 'mai_performance_images_entry_loading', '', $attr );
+		$loading = (string) apply_filters( 'mai_performance_media_entry_loading', '', $attr );
 
 		return in_array( $loading, [ 'lazy', 'eager' ], true ) ? $loading : '';
 	}
