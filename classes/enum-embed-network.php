@@ -11,7 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * The social networks whose embed scripts are delayed until an embed nears the screen.
  *
  * The case order is the order the loader lists them in. Each one knows which pasted
- * script tags belong to it, and the one fixed address the loader fetches later.
+ * script tags belong to it. The address each script is fetched from later lives in
+ * assets/js/lazy-embeds.js, under the same name as the case value.
  *
  * @since 1.0.0
  */
@@ -24,9 +25,10 @@ enum EmbedNetwork: string {
 	/**
 	 * Returns the network a script address belongs to, if it is one of the known libraries.
 	 *
-	 * The address is compared without its protocol, query or case, so a pasted
-	 * http://, a protocol-relative or an upper-case copy all match. A subdomain such
-	 * as www. is allowed where the library lives on one.
+	 * The address is compared without its protocol, query, fragment or case, so a
+	 * pasted http://, a protocol-relative or an upper-case copy all match. The host
+	 * has to be the library's own or a subdomain of it, such as www., and the path has
+	 * to match exactly, so a lookalike host or a copy on another site does not match.
 	 *
 	 * @since 1.0.0
 	 *
@@ -43,9 +45,13 @@ enum EmbedNetwork: string {
 			return null;
 		}
 
+		[ $host, $path ] = array_pad( explode( '/', $src, 2 ), 2, '' );
+
 		foreach ( self::cases() as $network ) {
-			foreach ( $network->paths() as $path ) {
-				if ( $src === $path || str_ends_with( $src, '.' . $path ) ) {
+			foreach ( $network->paths() as $known ) {
+				[ $known_host, $known_path ] = explode( '/', $known, 2 );
+
+				if ( $path === $known_path && ( $host === $known_host || str_ends_with( $host, '.' . $known_host ) ) ) {
 					return $network;
 				}
 			}
@@ -55,7 +61,7 @@ enum EmbedNetwork: string {
 	}
 
 	/**
-	 * Returns the address parts a pasted script is recognized by, without a protocol.
+	 * Returns the host and path a pasted script is recognized by, without a protocol.
 	 *
 	 * @since 1.0.0
 	 *
@@ -67,24 +73,6 @@ enum EmbedNetwork: string {
 			self::X         => [ 'platform.twitter.com/widgets.js', 'platform.x.com/widgets.js' ],
 			self::TikTok    => [ 'tiktok.com/embed.js' ],
 			self::Pinterest => [ 'assets.pinterest.com/js/pinit.js' ],
-		};
-	}
-
-	/**
-	 * Returns the one address the loader fetches the network's script from.
-	 *
-	 * Always https, and the same whichever pasted copy was delayed.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string
-	 */
-	public function script_url(): string {
-		return match ( $this ) {
-			self::Instagram => 'https://www.instagram.com/embed.js',
-			self::X         => 'https://platform.twitter.com/widgets.js',
-			self::TikTok    => 'https://www.tiktok.com/embed.js',
-			self::Pinterest => 'https://assets.pinterest.com/js/pinit.js',
 		};
 	}
 }

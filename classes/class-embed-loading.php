@@ -17,6 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * fetches a network's script once, when the first embed of that network comes close
  * to the screen.
  *
+ * Pinterest has two rules of its own. Its script is only delayed on a page with a
+ * pasted pin, and never when the script tag has data-pin- attributes, because those
+ * set up Pinterest's hover and save buttons, which load as they do today.
+ *
  * It uses the same page filter as LoadingAttributes, but does its own pass: that walk
  * only visits images, and the two jobs share nothing.
  *
@@ -33,7 +37,7 @@ final class EmbedLoading {
 	private const LOADER_ID = 'mai-performance-media-lazy-embeds';
 
 	/**
-	 * The loader's source, read once per request.
+	 * The loader's source, read once per request. Empty when the file can't be read.
 	 *
 	 * @since 1.0.0
 	 *
@@ -49,8 +53,8 @@ final class EmbedLoading {
 	 * @return void
 	 */
 	public function __construct() {
-		// WordPress starts collecting the page at priority 1000 when the page filter
-		// exists by then, so this adds it earlier on the same action.
+		// WordPress starts its page buffer at priority 1000 on this action, and a filter
+		// has to be added before then. Priority 10 gets in first.
 		add_action( 'wp_before_include_template', [ $this, 'add_page_filter' ], 10, 0 );
 	}
 
@@ -92,11 +96,18 @@ final class EmbedLoading {
 			return $html;
 		}
 
-		// A Pinterest script only runs pasted pins when the page has one. Without a
-		// pin it is the hover and save buttons, which load as they do today.
-		$pins     = false !== stripos( $html, 'data-pin-do' );
-		$tags     = new \WP_HTML_Tag_Processor( $html );
-		$networks = [];
+		// Without the loader nothing would put a delayed script back, so the page is
+		// left as it is.
+		$loader = self::loader();
+
+		if ( '' === $loader ) {
+			return $html;
+		}
+
+		// Pinterest's script is only delayed on a page with a pasted pin.
+		$pins    = false !== stripos( $html, 'data-pin-do' );
+		$tags    = new \WP_HTML_Tag_Processor( $html );
+		$delayed = [];
 
 		while ( $tags->next_tag( 'script' ) ) {
 			$src = $tags->get_attribute( 'src' );
@@ -108,7 +119,7 @@ final class EmbedLoading {
 				continue;
 			}
 
-			// A script with data-pin attributes of its own is configured for hover or
+			// A Pinterest script with data-pin- attributes of its own runs the hover or
 			// save buttons, so it is left alone.
 			if ( EmbedNetwork::Pinterest === $network && ( ! $pins || $tags->get_attribute_names_with_prefix( 'data-pin-' ) ) ) {
 				continue;
@@ -116,19 +127,32 @@ final class EmbedLoading {
 
 			$tags->remove_attribute( 'src' );
 
-			$networks[ $network->value ] = $network;
+			$delayed[] = $network;
 		}
 
-		if ( ! $networks ) {
+		if ( ! $delayed ) {
 			return $html;
 		}
 
-		$list = array_filter(
-			array_map( fn( EmbedNetwork $network ) => $network->value, EmbedNetwork::cases() ),
-			fn( string $value ) => isset( $networks[ $value ] )
+		// Listed in case order, whatever order the page had them in.
+		$networks = array_filter( EmbedNetwork::cases(), fn( EmbedNetwork $network ): bool => in_array( $network, $delayed, true ) );
+
+		$tag = wp_get_inline_script_tag(
+			$loader,
+			[
+				'id'            => self::LOADER_ID,
+				'data-networks' => implode( ',', array_column( $networks, 'value' ) ),
+			]
 		);
 
-		return self::add_loader( $tags->get_updated_html(), implode( ',', $list ) );
+		// WordPress returns an empty tag when it refuses the script text, for example
+		// when a filter gives the tag a type it can't escape for. The page as it came
+		// in still has every src.
+		if ( '' === $tag ) {
+			return $html;
+		}
+
+		return self::add_loader( $tags->get_updated_html(), $tag );
 	}
 
 	/**
@@ -153,29 +177,39 @@ final class EmbedLoading {
 	}
 
 	/**
-	 * Adds the loader before the last closing body tag, or at the end without one.
+	 * Returns the loader's source, or an empty string when the file can't be read.
 	 *
-	 * Built with wp_get_inline_script_tag() so a site's script attribute filters,
-	 * such as a content security policy nonce, apply to it.
+	 * The readable check keeps a PHP warning out of the page.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $html     The page.
-	 * @param string $networks The delayed networks, comma separated.
+	 * @return string
+	 */
+	private static function loader(): string {
+		if ( null === self::$loader ) {
+			$file   = dirname( __DIR__ ) . '/assets/js/lazy-embeds.js';
+			$source = is_readable( $file ) ? file_get_contents( $file ) : false;
+
+			self::$loader = is_string( $source ) ? trim( $source ) : '';
+		}
+
+		return self::$loader;
+	}
+
+	/**
+	 * Adds the loader tag before the last closing body tag, or at the end without one.
+	 *
+	 * The tag is built with wp_get_inline_script_tag() so a site's script attribute
+	 * filters, such as a content security policy nonce, apply to it.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $html The page.
+	 * @param string $tag  The loader's script tag.
 	 *
 	 * @return string
 	 */
-	private static function add_loader( string $html, string $networks ): string {
-		self::$loader ??= (string) file_get_contents( dirname( __DIR__ ) . '/assets/js/lazy-embeds.js' );
-
-		$tag = wp_get_inline_script_tag(
-			self::$loader,
-			[
-				'id'            => self::LOADER_ID,
-				'data-networks' => $networks,
-			]
-		);
-
+	private static function add_loader( string $html, string $tag ): string {
 		$body = strripos( $html, '</body>' );
 
 		if ( false === $body ) {
