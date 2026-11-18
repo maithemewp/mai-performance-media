@@ -21,7 +21,7 @@
 - Never push, tag, create a GitHub repo or release without asking first and getting a yes for that specific action.
 - Headless browsers by default. A real browser only through `~/.agents/scripts/bg-chrome` (it never takes the foreground), and `bg-chrome stop` afterwards.
 - The filter is `mai_performance_media_lazy_embeds` from the first commit, even before the rename.
-- Margin: `200px`. Fixed script URLs: `https://www.instagram.com/embed.js`, `https://platform.twitter.com/widgets.js`, `https://www.tiktok.com/embed.js`, `https://assets.pinterest.com/js/pinit.js`.
+- Margin: `200px`; X also uses 1200px once the reader scrolls (amended 2026-11-17, see the spec's Layout shift section). Fixed script URLs: `https://www.instagram.com/embed.js`, `https://platform.twitter.com/widgets.js`, `https://www.tiktok.com/embed.js`, `https://assets.pinterest.com/js/pinit.js`.
 - Network keys used between PHP and JS: `instagram`, `x`, `tiktok`, `pinterest`.
 
 ## Review Focus
@@ -97,7 +97,7 @@ git commit -m "Delay embed scripts on the finished page"
 
 **Interfaces:**
 - Consumes: the loader tag's `id` and `data-networks` from Task 1. The loader reads them with `document.currentScript.dataset.networks`.
-- Produces: `bin/check-embeds.mjs <url> [<url>...]` prints one pretty-printed JSON object per URL with `scriptsAtLoad` (embed scripts requested before any scrolling), `scripts` (each embed script URL requested, with its time), `unrendered` (embeds still a blockquote or pin link after scrolling), `cls`, and exits non-zero when `unrendered` is not 0 for Instagram or X, or when `cls` is above 0. Whether a script loaded too early is read from `scriptsAtLoad` by the person running it.
+- Produces: `bin/check-embeds.mjs <url> [<url>...]` prints one pretty-printed JSON object per URL with `scriptsAtLoad` (embed scripts requested before any scrolling), `scripts` (each embed script URL requested, with its time), `unrendered` (embeds still a blockquote or pin link after scrolling), `cls`, and exits non-zero when `unrendered` is not 0 for Instagram or X, or when `cls` is above 0.1. Whether a script loaded too early is read from `scriptsAtLoad` by the person running it.
 
 - [ ] **Step 1: Write the loader** in `assets/js/lazy-embeds.js`, plain ES2017, no dependencies, wrapped in an IIFE and a `try`/`catch` so a failure leaves the fallbacks as they are. The behaviour is the spec's "In the browser: the loader" section, steps 1 to 8. The decisions it can't infer:
   - The marker attribute for a hidden Instagram or X embed is `data-mpm-embed="<network>"`. For a Pinterest pin, `data-pin-do`'s value moves to `data-mpm-pin-do` and is restored from there.

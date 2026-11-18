@@ -104,6 +104,8 @@ The loader goes through `wp_get_inline_script_tag()`, so `wp_inline_script_attri
 
 No space is reserved. Embeds start loading 200px before they reach the screen, Instagram's pasted fallback carries its own sizing, and every measurement showed a layout shift of 0. My call, from the measurements. If real-user CLS rises after release, a `min-height` per network is the fix.
 
+**Amended 2026-11-17.** In the build's measurements X embeds shifted the page on fast scrolls at 200px. The spike's zero was measured at 1500px. So X also loads from 1200px once the reader starts scrolling, and every network keeps 200px while the page is at rest. A fixed height on X fallbacks is ruled out, because tweet heights vary too much. If real-user CLS rises on X posts after release, the next step is chosen from field data, not a fixed number.
+
 ### Mai Embed Fixer
 
 No changes needed in either plugin. The fixer writes one script tag (`<script async class="mai-instagram-script" src="//www.instagram.com/embed.js" charset="utf-8">`, and the X equivalent); the pass delays it like any other. A test uses that exact tag. Separately, the fixer's duplicate removal misses `platform.x.com/widgets.js`; that is a fixer TODO, not this work.

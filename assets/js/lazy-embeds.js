@@ -5,7 +5,8 @@
  * Pinterest embed script it found, and printed this file inline with the networks it
  * delayed. Here each embed's marker comes off, so the network's script would not
  * render it yet, and goes back when the embed comes within 200px of the screen. Then
- * the script loads, once per network, and renders that embed.
+ * the script loads, once per network, and renders that embed. X embeds also start
+ * 1200px early once the reader scrolls, because a tweet is slow to render and grows.
  *
  * Any error leaves the pasted fallbacks as they are, which is what a reader sees
  * today when a blocker stops the network's script.
@@ -42,6 +43,10 @@
 					'a.twitter-hashtag-button',
 					'a.twitter-mention-button',
 				],
+				// A first tweet took about 1.15s to render and grew about 400px, so at 200px a
+				// fast scroll reached it first and the page jumped. A wider margin from the
+				// start loaded X during page load on many posts, so it waits for a scroll.
+				lead: '1200px 0px',
 				// X's own snippet makes an empty twttr early, so twttr alone is not enough.
 				loaded: () => window.twttr && window.twttr.widgets,
 				// X only looks inside the element it is given, and ready() waits until it can.
@@ -109,48 +114,64 @@
 			return;
 		}
 
-		// What to do with each observed embed when it nears the screen.
+		// Each embed not shown yet: its network, and what to do when it nears the screen.
 		const waiting = new Map();
 
-		const observer = new window.IntersectionObserver(
-			( entries ) => {
-				entries.forEach( ( entry ) => {
-					if ( ! entry.isIntersecting ) {
-						return;
-					}
+		// An X embed can be watched with two margins. Whichever observer sees it first
+		// shows it and takes it out of waiting, so the other finds nothing to do.
+		const observeWithin = ( margin ) => {
+			const observer = new window.IntersectionObserver(
+				( entries ) => {
+					entries.forEach( ( entry ) => {
+						// One embed that fails should not stop the rest.
+						try {
+							if ( ! entry.isIntersecting ) {
+								return;
+							}
 
-					observer.unobserve( entry.target );
+							observer.unobserve( entry.target );
 
-					const show = waiting.get( entry.target );
+							const item = waiting.get( entry.target );
 
-					waiting.delete( entry.target );
+							waiting.delete( entry.target );
 
-					if ( show ) {
-						show();
-					}
-				} );
-			},
-			{ rootMargin: '200px 0px' }
-		);
+							if ( item ) {
+								item.show();
+							}
+						} catch ( error ) {
+							// That embed keeps its fallback.
+						}
+					} );
+				},
+				{ rootMargin: margin }
+			);
+
+			return observer;
+		};
+
+		const near = observeWithin( '200px 0px' );
 
 		// Gives the embed its marker back, loads the script, then renders the embed.
 		// Rendering one that already rendered is harmless, since it no longer matches.
 		const watch = ( name, embed, restore ) => {
 			const network = networks[ name ];
 
-			waiting.set( embed, () => {
-				restore();
+			waiting.set( embed, {
+				name,
+				show: () => {
+					restore();
 
-				load( name )
-					.then( () => {
-						if ( network.render ) {
-							network.render( embed );
-						}
-					} )
-					.catch( () => {} );
+					load( name )
+						.then( () => {
+							if ( network.render ) {
+								network.render( embed );
+							}
+						} )
+						.catch( () => {} );
+				},
 			} );
 
-			observer.observe( embed );
+			near.observe( embed );
 		};
 
 		delayed.forEach( ( name ) => {
@@ -194,6 +215,46 @@
 				} );
 			}
 		} );
+
+		const leading = delayed.filter( ( name ) => networks[ name ].lead );
+
+		if ( ! leading.length ) {
+			return;
+		}
+
+		// A 1px mark at the top of the page leaves the screen once the reader scrolls, or
+		// straight away on a page opened partway down. A page nobody scrolls, such as a
+		// lab test, keeps the 200px margin, and no scroll listener is needed.
+		const mark = document.createElement( 'div' );
+
+		mark.style.cssText =
+			'position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none';
+		document.body.appendChild( mark );
+
+		const scrolled = new window.IntersectionObserver( ( entries ) => {
+			try {
+				if ( entries.every( ( entry ) => entry.isIntersecting ) ) {
+					return;
+				}
+
+				scrolled.disconnect();
+				mark.remove();
+
+				leading.forEach( ( name ) => {
+					const early = observeWithin( networks[ name ].lead );
+
+					waiting.forEach( ( item, embed ) => {
+						if ( name === item.name ) {
+							early.observe( embed );
+						}
+					} );
+				} );
+			} catch ( error ) {
+				// Those embeds still load at 200px.
+			}
+		} );
+
+		scrolled.observe( mark );
 	} catch ( error ) {
 		// The fallbacks stay as they are.
 	}

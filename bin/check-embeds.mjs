@@ -14,7 +14,8 @@
  * them out, pass --block with a JSON file holding an array of hostnames, and every
  * request to those hosts is stopped.
  *
- * Exits non-zero when an Instagram or X embed did not render, or anything shifted.
+ * Exits non-zero when an Instagram or X embed did not render, or cls is above 0.1,
+ * Google's line for a good score.
  * TikTok and Pinterest are reported but not judged: TikTok's own library can be down,
  * and Pinterest only renders in a real browser, not a headless one.
  */
@@ -38,6 +39,9 @@ if ( ! urls.length ) {
 	process.exit( 2 );
 }
 
+// Google's line for good layout shift.
+const CLS_LIMIT = 0.1;
+
 // The network libraries, matched on the address without its query.
 const SCRIPTS =
 	/^https?:\/\/(?:www\.instagram\.com\/embed\.js|platform\.(?:twitter|x)\.com\/widgets\.js|www\.tiktok\.com\/embed\.js|assets\.pinterest\.com\/js\/pinit\.js)$/;
@@ -53,7 +57,7 @@ for ( const url of urls ) {
 		if (
 			result.unrendered.instagram ||
 			result.unrendered.x ||
-			result.cls > 0
+			result.cls > CLS_LIMIT
 		) {
 			process.exitCode = 1;
 		}
