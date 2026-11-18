@@ -10,7 +10,8 @@ Updated: November 17, 2026 by Claude
 - Kept on purpose: `data-mpi-loading`, the `?mpi=` cache-buster, the `imgLoading` block attribute, the `image_loading` and `image_loading_count` settings, and every `field_63f9...` ACF key.
 
 ## Next
-- Run the swap runbook, one site at a time. Ask first for every push, tag and release.
+- Ask before the GitHub repo rename, the push to `main`, the 1.0.0 tag and the release. Then run the swap runbook, one site at a time.
+- Check one TikTok post in a real browser once TikTok's embeds work again (TODO.md).
 - Then update the outside references, runbook step 6.
 - Remove the `mai_publisher_html` late pass once https://github.com/bizbudding/mai-publisher/issues/62 lands.
 - Check mai-content-areas on real block theme content.
@@ -21,6 +22,7 @@ Updated: November 17, 2026 by Claude
 ## Verify
 - `composer test` and `npx wp-scripts lint-js`. The test database is `mai_performance_media_tests`.
 - `npm run check:embeds -- --block <hosts.json> <url>...` with a `?mpi=<random>` query: exit 0, every Instagram and X embed rendered, `scriptsAtLoad` 0 on posts with no embed in the first screen.
+- Pinterest, November 17, background Chrome on a post with pasted pins that still exist: 63 pins rendered with the feature off and 63 with it on, and `pinit.js` loaded once.
 - Fetch a page with `curl -skL` plus a `?mpi=<random>` query, because a page cache serves cached pages otherwise. Expect `id="mai-performance-media-lazy-embeds"` on a page with embeds and exactly one `fetchpriority="high"`.
 - Local Herd sites use a symlink to this folder named `mai-performance-media`.
 - Lighthouse 13.6.0 on 2026-11-17, mobile, ads blocked, 5 runs each, feature off then on, medians with ranges. Off to on, same direction as the spike. Embed bytes and embed main-thread time fell to 0 on both posts in every run.
