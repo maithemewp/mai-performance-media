@@ -1,18 +1,18 @@
 # State
-Updated: November 17, 2026 by Claude
+Updated: November 18, 2026 by Claude
 
 ## Now
-1.0.0, Mai Performance Media, is committed locally on `develop` with the final review fixes. Nothing is pushed, tagged or renamed on GitHub. Spec: `docs/specs/2026-11-17-lazy-embeds.md`. Plan: `docs/plans/2026-11-17-lazy-embeds.md`. Runbook: `docs/runbooks/2026-11-17-swap-to-mai-performance-media.md`.
+1.0.0, Mai Performance Media, is released and on every site. On November 18 the GitHub repo was renamed to `maithemewp/mai-performance-media`, `main` and `develop` were pushed, and tag 1.0.0 was pushed (tags only, no GitHub release, as before). 64 sites were swapped with `mai-sites`: 59 now run 1.0.0 active, and 5 that had the old plugin inactive only had it deleted. `mai-sites plugins list mai-performance-images` lists no site; 3 sites on one server never answered and are left out on purpose. Spec: `docs/specs/2026-11-17-lazy-embeds.md`. Plan: `docs/plans/2026-11-17-lazy-embeds.md`. Runbook: `docs/runbooks/2026-11-17-swap-to-mai-performance-media.md`.
 
 - Instagram, X, TikTok and Pinterest embed scripts are delayed and each loads as its first embed nears the screen (`classes/class-embed-loading.php`, `assets/js/lazy-embeds.js`). Filter `mai_performance_media_lazy_embeds` turns it off. If the loader can't be read or printed, the page is left as it came.
 - Loader margins: 200px for every network at rest, and X also from 1600px once the reader starts scrolling. At 200px alone, fast-scroll CLS had a median of 0.166 on 8 X posts. With the split, no sampled post loaded a script at page load, and every check at the 700ms pace scored cls 0.
-- Renamed: namespace `Mai\PerformanceMedia`, main file `mai-performance-media.php`, slug and text domain `mai-performance-media`, filters `mai_performance_media_*`. The folder and GitHub repo keep the old name for now. The 0.7.0 and 0.9.0 cleanup code is gone.
+- Renamed: namespace `Mai\PerformanceMedia`, main file `mai-performance-media.php`, slug and text domain `mai-performance-media`, filters `mai_performance_media_*`. The local folder is `~/Plugins/mai-performance-media` and the 16 local Herd links point at it. The 0.7.0 and 0.9.0 cleanup code is gone.
 - Kept on purpose: `data-mpi-loading`, the `?mpi=` cache-buster, the `imgLoading` block attribute, the `image_loading` and `image_loading_count` settings, and every `field_63f9...` ACF key.
 
 ## Next
-- Ask before the GitHub repo rename, the push to `main`, the 1.0.0 tag and the release. Then run the swap runbook, one site at a time.
 - Check one TikTok post in a real browser once TikTok's embeds work again (TODO.md).
-- Then update the outside references, runbook step 6.
+- Update the outside references, runbook step 6: the company theme's plugin list, client themes' `setup/design.json` plugin lists, the two skills, and Hindsight.
+- In a few weeks, compare real-user CLS and LCP on two embed-heavy sites (Chrome's field data and the ad network's Core Web Vitals report), especially X-heavy posts.
 - Remove the `mai_publisher_html` late pass once https://github.com/bizbudding/mai-publisher/issues/62 lands.
 - Check mai-content-areas on real block theme content.
 
