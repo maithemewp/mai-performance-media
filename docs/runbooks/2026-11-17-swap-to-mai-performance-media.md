@@ -66,7 +66,7 @@ mai-sites config check <site>
 
 Check: `config check` prints `✓ All checks passed.` for the site.
 
-A push sends the folder as it is on disk, so push the release and nothing else. Step 2 ends on `develop`, so switch to `main` at the tag first, and confirm `vendor/` and `build/` are there, since sites run them as committed.
+A push sends the folder as it is on disk, so push the release and nothing else. Step 2 ends on `main`. Check out the tag so the push is exactly the release, and confirm `vendor/` and `build/` are there, since sites run them as committed.
 
 ```
 git -C ~/Plugins/mai-performance-images checkout 1.0.0
@@ -185,7 +185,7 @@ rg -l 'mai-performance-images' ~/Plugins ~/.agents/skills ~/Herd --glob '!node_m
 
 Check: nothing in the list that you did not mean to leave. Old release notes and the git history may still name the old plugin, and that is fine.
 
-Last, rename the local folder and repoint the local Herd symlinks. Each of the 16 local sites already has a link named `mai-performance-media`, but it points at the old folder name.
+Last, rename the local folder and repoint the local Herd symlinks. Each local site already has a link named `mai-performance-media`, but it points at the old folder name.
 
 ```
 mv ~/Plugins/mai-performance-images ~/Plugins/mai-performance-media

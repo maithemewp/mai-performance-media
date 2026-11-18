@@ -1,6 +1,6 @@
 {
     "name": "maithemewp/mai-performance-media",
-    "description": "Loads the first images on each page right away and lazy loads the rest.",
+    "description": "Loads each page's main image right away, lazy loads the rest, and loads social embeds as readers scroll to them.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "repositories": [

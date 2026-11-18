@@ -28,7 +28,9 @@ On sites running Mai Publisher, ads and sidebar content are added to the page af
 
 ## Embeds
 
-Instagram, X, TikTok and Pinterest embeds each load a script that is heavy and blocks the page. The plugin holds those scripts back and loads each one as its first embed nears the screen. Embeds sit in the page as plain markup until then. The loader starts a script 200px before an embed reaches the screen. X starts from 1600px away once the reader begins scrolling, because a tweet is slow to render and grows after it does.
+Instagram, X, TikTok and Pinterest embeds each load a heavy script as soon as the page loads, even for an embed far below the top. The plugin holds those scripts back and loads each one as its first embed nears the screen. Embeds sit in the page as plain markup until then. The loader starts a script 200px before an embed reaches the screen. X starts from 1600px away once the reader begins scrolling, because a tweet is slow to render and grows after it does.
+
+The loader is an inline script, so a strict Content-Security-Policy without a nonce or `unsafe-inline` blocks it, and embeds stay as their pasted fallbacks.
 
 ## Settings
 
@@ -88,3 +90,5 @@ composer test
 The tests load WordPress and need MySQL with an empty `mai_performance_media_tests` database. Set `WP_TESTS_DB_NAME`, `WP_TESTS_DB_USER`, `WP_TESTS_DB_PASS` or `WP_TESTS_DB_HOST` to use a different one.
 
 Edit block editor code in `src/` and build it with `npm run build`. The built files in `build/` are committed.
+
+`npm run check:embeds -- <url>` scrolls a page in headless Chrome and reports how its embeds loaded. The top of `bin/check-embeds.mjs` explains the options and the result.

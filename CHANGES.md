@@ -4,7 +4,7 @@
 
 ### Added
 
-- **Social embeds load as readers scroll to them.** Instagram, X, TikTok and Pinterest each load a heavy script that blocks the page, even for an embed far below the top. The plugin now holds each script back and loads it when its first embed comes within 200px of the screen. X is the exception: once the reader starts scrolling it loads from 1600px away, because a tweet is slow to render and grows after it does, and a closer start let fast scrolling jump the page. Until then an embed is plain text and a link. `mai_performance_media_lazy_embeds` turns it off.
+- **Social embeds load as readers scroll to them.** Instagram, X, TikTok and Pinterest each load a heavy script as soon as the page loads, even for an embed far below the top. The plugin now holds each script back and loads it when its first embed comes within 200px of the screen. X is the exception: once the reader starts scrolling it loads from 1600px away, because a tweet is slow to render and grows after it does, and a closer start let fast scrolling jump the page. Until then an embed is plain text and a link. `mai_performance_media_lazy_embeds` turns it off.
 
 ### Changed
 

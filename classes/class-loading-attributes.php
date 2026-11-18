@@ -198,8 +198,8 @@ final class LoadingAttributes {
 		add_filter( 'pre_wp_get_loading_optimization_attributes', [ $this, 'mark_image' ], 10, 4 );
 		add_filter( 'wp_get_loading_optimization_attributes',     [ $this, 'filter_loading_attributes' ], 10, 4 );
 
-		// WordPress starts collecting the page at priority 1000 when the page filter
-		// exists by then, so this adds it earlier on the same action.
+		// WordPress starts its page buffer at priority 1000 on this action, and a filter
+		// has to be added before then. Priority 10 gets in first.
 		add_action( 'wp_before_include_template', [ $this, 'add_page_filter' ], 10, 0 );
 	}
 
