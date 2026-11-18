@@ -37,20 +37,17 @@ enum EmbedNetwork: string {
 	 * @return self|null
 	 */
 	public static function from_src( string $src ): ?self {
-		$src = strtolower( trim( $src ) );
-		$src = (string) preg_replace( '#^(?:[a-z][a-z0-9+.-]*:)?//#', '', $src );
-		$src = strtok( $src, '?#' );
+		$url = wp_parse_url( trim( $src ) );
 
-		if ( ! is_string( $src ) ) {
+		if ( ! is_array( $url ) || ! isset( $url['host'], $url['path'] ) ) {
 			return null;
 		}
 
-		[ $host, $path ] = array_pad( explode( '/', $src, 2 ), 2, '' );
+		$host = strtolower( $url['host'] );
+		$path = strtolower( $url['path'] );
 
 		foreach ( self::cases() as $network ) {
-			foreach ( $network->paths() as $known ) {
-				[ $known_host, $known_path ] = explode( '/', $known, 2 );
-
+			foreach ( $network->libraries() as [ $known_host, $known_path ] ) {
 				if ( $path === $known_path && ( $host === $known_host || str_ends_with( $host, '.' . $known_host ) ) ) {
 					return $network;
 				}
@@ -61,18 +58,18 @@ enum EmbedNetwork: string {
 	}
 
 	/**
-	 * Returns the host and path a pasted script is recognized by, without a protocol.
+	 * Returns the host and path of each library a pasted script is recognized by.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return string[]
+	 * @return array<int, array{0: string, 1: string}>
 	 */
-	public function paths(): array {
+	public function libraries(): array {
 		return match ( $this ) {
-			self::Instagram => [ 'instagram.com/embed.js' ],
-			self::X         => [ 'platform.twitter.com/widgets.js', 'platform.x.com/widgets.js' ],
-			self::TikTok    => [ 'tiktok.com/embed.js' ],
-			self::Pinterest => [ 'assets.pinterest.com/js/pinit.js' ],
+			self::Instagram => [ [ 'instagram.com', '/embed.js' ] ],
+			self::X         => [ [ 'platform.twitter.com', '/widgets.js' ], [ 'platform.x.com', '/widgets.js' ] ],
+			self::TikTok    => [ [ 'tiktok.com', '/embed.js' ] ],
+			self::Pinterest => [ [ 'assets.pinterest.com', '/js/pinit.js' ] ],
 		};
 	}
 }

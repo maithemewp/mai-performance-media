@@ -34,7 +34,7 @@ final class EmbedLoading {
 	 *
 	 * @var string
 	 */
-	private const LOADER_ID = 'mai-performance-media-lazy-embeds';
+	public const LOADER_ID = 'mai-performance-media-lazy-embeds';
 
 	/**
 	 * The loader's source, read once per request. Empty when the file can't be read.
@@ -96,16 +96,9 @@ final class EmbedLoading {
 			return $html;
 		}
 
-		// Without the loader nothing would put a delayed script back, so the page is
-		// left as it is.
-		$loader = self::loader();
-
-		if ( '' === $loader ) {
-			return $html;
-		}
-
-		// Pinterest's script is only delayed on a page with a pasted pin.
-		$pins    = false !== stripos( $html, 'data-pin-do' );
+		// Whether the page has a pasted pin, looked up once the first Pinterest script
+		// turns up, since most pages have none.
+		$pins    = null;
 		$tags    = new \WP_HTML_Tag_Processor( $html );
 		$delayed = [];
 
@@ -119,29 +112,42 @@ final class EmbedLoading {
 				continue;
 			}
 
-			// A Pinterest script with data-pin- attributes of its own runs the hover or
-			// save buttons, so it is left alone.
-			if ( EmbedNetwork::Pinterest === $network && ( ! $pins || $tags->get_attribute_names_with_prefix( 'data-pin-' ) ) ) {
-				continue;
+			// Pinterest's script is only delayed on a page with a pasted pin. A copy with
+			// data-pin- attributes of its own runs the hover or save buttons, so it is
+			// left alone.
+			if ( EmbedNetwork::Pinterest === $network ) {
+				$pins ??= false !== stripos( $html, 'data-pin-do' );
+
+				if ( ! $pins || $tags->get_attribute_names_with_prefix( 'data-pin-' ) ) {
+					continue;
+				}
 			}
 
 			$tags->remove_attribute( 'src' );
 
-			$delayed[] = $network;
+			$delayed[ $network->value ] = true;
 		}
 
 		if ( ! $delayed ) {
 			return $html;
 		}
 
+		// Without the loader nothing would put a delayed script back. The walk only
+		// changed the tag processor, so the page as it came in is returned whole.
+		$loader = self::loader();
+
+		if ( '' === $loader ) {
+			return $html;
+		}
+
 		// Listed in case order, whatever order the page had them in.
-		$networks = array_filter( EmbedNetwork::cases(), fn( EmbedNetwork $network ): bool => in_array( $network, $delayed, true ) );
+		$networks = array_filter( array_column( EmbedNetwork::cases(), 'value' ), fn( string $name ): bool => isset( $delayed[ $name ] ) );
 
 		$tag = wp_get_inline_script_tag(
 			$loader,
 			[
 				'id'            => self::LOADER_ID,
-				'data-networks' => implode( ',', array_column( $networks, 'value' ) ),
+				'data-networks' => implode( ',', $networks ),
 			]
 		);
 
@@ -158,6 +164,9 @@ final class EmbedLoading {
 	/**
 	 * Whether the page mentions any known embed script, as a quick check before the walk.
 	 *
+	 * This runs on every page, so it looks for each library's file name once, which is
+	 * fewer scans than one per library. The walk then checks the whole address.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @param string $html The finished page.
@@ -165,11 +174,17 @@ final class EmbedLoading {
 	 * @return bool
 	 */
 	private static function has_known_script( string $html ): bool {
+		$files = [];
+
 		foreach ( EmbedNetwork::cases() as $network ) {
-			foreach ( $network->paths() as $path ) {
-				if ( false !== stripos( $html, $path ) ) {
-					return true;
-				}
+			foreach ( $network->libraries() as [ , $path ] ) {
+				$files[ basename( $path ) ] = true;
+			}
+		}
+
+		foreach ( array_keys( $files ) as $file ) {
+			if ( false !== stripos( $html, $file ) ) {
+				return true;
 			}
 		}
 
