@@ -14,7 +14,7 @@ use Mai\PerformanceMedia\Tests\TestCase;
  */
 final class EmbedLoadingTest extends TestCase {
 
-	private const LOADER_ID = 'id="mai-performance-media-lazy-embeds"';
+	private const LOADER_ATTRIBUTE = 'id="' . EmbedLoading::LOADER_ID . '"';
 
 	private const LOADER_FILE = __DIR__ . '/../../assets/js/lazy-embeds.js';
 
@@ -25,6 +25,8 @@ final class EmbedLoadingTest extends TestCase {
 	private const TIKTOK_QUOTE = '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@user/video/123" data-video-id="123"><section></section></blockquote>';
 
 	private const PIN = '<a data-pin-do="embedPin" href="https://www.pinterest.com/pin/1/"></a>';
+
+	private const INSTAGRAM_SCRIPT = '<script async src="//www.instagram.com/embed.js"></script>';
 
 	public function tear_down(): void {
 		$this->set_loader( null );
@@ -38,6 +40,31 @@ final class EmbedLoadingTest extends TestCase {
 
 	private function page_html( string $body ): string {
 		return '<html><head><title>T</title></head><body>' . $body . '</body></html>';
+	}
+
+	/**
+	 * Returns a page with an Instagram embed and its pasted script, the usual case.
+	 *
+	 * @param string $before Markup to put before the embed.
+	 *
+	 * @return string
+	 */
+	private function instagram_page( string $before = '' ): string {
+		return $this->page_html( $before . self::INSTAGRAM_QUOTE . self::INSTAGRAM_SCRIPT );
+	}
+
+	/**
+	 * Asserts every embed script lost its src and one loader was added for these networks.
+	 *
+	 * @param string $out      The filtered page.
+	 * @param string $networks The loader's data-networks value.
+	 *
+	 * @return void
+	 */
+	private function assert_delayed( string $out, string $networks ): void {
+		$this->assertSame( [], $this->script_srcs( $out ) );
+		$this->assertSame( 1, substr_count( $out, self::LOADER_ATTRIBUTE ) );
+		$this->assertStringContainsString( 'data-networks="' . $networks . '"', $out );
 	}
 
 	/**
@@ -112,7 +139,7 @@ final class EmbedLoadingTest extends TestCase {
 	}
 
 	private function is_loader( \WP_HTML_Tag_Processor $tags ): bool {
-		return 'SCRIPT' === $tags->get_tag() && 'mai-performance-media-lazy-embeds' === $tags->get_attribute( 'id' );
+		return 'SCRIPT' === $tags->get_tag() && EmbedLoading::LOADER_ID === $tags->get_attribute( 'id' );
 	}
 
 	public static function libraries(): array {
@@ -131,10 +158,8 @@ final class EmbedLoadingTest extends TestCase {
 	public function test_each_library_is_delayed( string $src, string $embed, string $network ): void {
 		$out = $this->run_filter( $this->page_html( $embed . "\n" . '<script async src="' . $src . '" charset="utf-8"></script>' ) );
 
-		$this->assertSame( [], $this->script_srcs( $out ) );
+		$this->assert_delayed( $out, $network );
 		$this->assertStringContainsString( $embed . "\n", $out );
-		$this->assertSame( 1, substr_count( $out, self::LOADER_ID ) );
-		$this->assertStringContainsString( 'data-networks="' . $network . '"', $out );
 	}
 
 	public static function unusual_sources(): array {
@@ -161,9 +186,7 @@ final class EmbedLoadingTest extends TestCase {
 	public function test_unusual_src_forms_are_delayed( string $script, string $network ): void {
 		$out = $this->run_filter( $this->page_html( self::INSTAGRAM_QUOTE . $script ) );
 
-		$this->assertSame( [], $this->script_srcs( $out ) );
-		$this->assertSame( 1, substr_count( $out, self::LOADER_ID ) );
-		$this->assertStringContainsString( 'data-networks="' . $network . '"', $out );
+		$this->assert_delayed( $out, $network );
 	}
 
 	public static function lookalike_sources(): array {
@@ -190,18 +213,15 @@ final class EmbedLoadingTest extends TestCase {
 	public function test_mai_embed_fixer_tag_is_delayed(): void {
 		$out = $this->run_filter( $this->page_html( self::INSTAGRAM_QUOTE . '<script async class="mai-instagram-script" src="//www.instagram.com/embed.js" charset="utf-8"></script>' ) );
 
-		$this->assertSame( [], $this->script_srcs( $out ) );
+		$this->assert_delayed( $out, 'instagram' );
 		$this->assertStringContainsString( 'class="mai-instagram-script"', $out );
-		$this->assertSame( 1, substr_count( $out, self::LOADER_ID ) );
 	}
 
 	public function test_three_pasted_copies_give_one_loader(): void {
-		$embed = self::INSTAGRAM_QUOTE . "\n" . '<script async src="//www.instagram.com/embed.js"></script>';
+		$embed = self::INSTAGRAM_QUOTE . "\n" . self::INSTAGRAM_SCRIPT;
 		$out   = $this->run_filter( $this->page_html( $embed . $embed . $embed ) );
 
-		$this->assertSame( 1, substr_count( $out, self::LOADER_ID ) );
-		$this->assertStringContainsString( 'data-networks="instagram"', $out );
-		$this->assertSame( [], $this->script_srcs( $out ) );
+		$this->assert_delayed( $out, 'instagram' );
 	}
 
 	public function test_networks_listed_in_order(): void {
@@ -209,16 +229,16 @@ final class EmbedLoadingTest extends TestCase {
 			self::PIN . '<script async defer src="//assets.pinterest.com/js/pinit.js"></script>'
 			. self::TIKTOK_QUOTE . '<script async src="https://www.tiktok.com/embed.js"></script>'
 			. self::X_QUOTE . '<script async src="https://platform.twitter.com/widgets.js"></script>'
-			. self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>'
+			. self::INSTAGRAM_QUOTE . self::INSTAGRAM_SCRIPT
 		) );
 
-		$this->assertStringContainsString( 'data-networks="instagram,x,tiktok,pinterest"', $out );
+		$this->assert_delayed( $out, 'instagram,x,tiktok,pinterest' );
 	}
 
 	public function test_loader_goes_before_the_last_body_close(): void {
-		$out = $this->run_filter( $this->page_html( self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' ) );
+		$out = $this->run_filter( $this->instagram_page() );
 
-		$loader = strpos( $out, self::LOADER_ID );
+		$loader = strpos( $out, self::LOADER_ATTRIBUTE );
 
 		$this->assertNotFalse( $loader );
 		$this->assertGreaterThan( $loader, strripos( $out, '</body>' ) );
@@ -226,9 +246,9 @@ final class EmbedLoadingTest extends TestCase {
 	}
 
 	public function test_loader_is_appended_without_body_close(): void {
-		$out = $this->run_filter( self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' );
+		$out = $this->run_filter( self::INSTAGRAM_QUOTE . self::INSTAGRAM_SCRIPT );
 
-		$this->assertSame( 1, substr_count( $out, self::LOADER_ID ) );
+		$this->assert_delayed( $out, 'instagram' );
 		$this->assertTrue( $this->loader_is_last( $out ) );
 		$this->assertStringStartsWith( self::INSTAGRAM_QUOTE, $out );
 	}
@@ -241,7 +261,7 @@ final class EmbedLoadingTest extends TestCase {
 		$this->assertStringNotContainsStringIgnoringCase( '</script', $source );
 		$this->assertStringNotContainsString( '<!--', $source );
 
-		$out = $this->run_filter( $this->page_html( self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' ) );
+		$out = $this->run_filter( $this->instagram_page() );
 
 		$this->assertStringContainsString( 'IntersectionObserver', (string) $this->loader_text( $out ) );
 	}
@@ -249,35 +269,43 @@ final class EmbedLoadingTest extends TestCase {
 	public function test_loader_networks_match_the_enum(): void {
 		$source = (string) file_get_contents( self::LOADER_FILE );
 
-		// Each network in the loader's networks object starts with its fixed src.
-		preg_match_all( "#^\t{3}([a-z]+): \\{\n\t{4}src: '([^']+)',$#m", $source, $matches, PREG_SET_ORDER );
+		// The loader's networks object, up to the line that closes it.
+		$this->assertSame( 1, preg_match( '#\bconst\s+networks\s*=\s*\{(.*?)\n\s*\};#s', $source, $block ) );
 
-		$keys = array_column( $matches, 1 );
+		// Each network is a key opening an object on its own line, and runs to the next
+		// one. Spacing and the order of its keys don't matter.
+		preg_match_all( '#^\s*([a-z]+)\s*:\s*\{(.*?)(?=^\s*[a-z]+\s*:\s*\{|\z)#ms', $block[1], $entries, PREG_SET_ORDER );
 
-		$this->assertSame( array_column( EmbedNetwork::cases(), 'value' ), $keys );
+		$this->assertSame( array_column( EmbedNetwork::cases(), 'value' ), array_column( $entries, 1 ) );
 
-		foreach ( $matches as [ , $key, $src ] ) {
-			$this->assertSame( EmbedNetwork::from( $key ), EmbedNetwork::from_src( $src ), $key );
+		foreach ( $entries as [ , $key, $entry ] ) {
+			$this->assertSame( 1, preg_match( '#\bsrc\s*:\s*[\'"]([^\'"]+)[\'"]#', $entry, $src ), $key );
+			$this->assertSame( EmbedNetwork::from( $key ), EmbedNetwork::from_src( $src[1] ), $key );
 		}
 	}
 
-	public function test_unreadable_loader_leaves_the_page_identical(): void {
-		// A failed read is cached as an empty source.
-		$this->set_loader( '' );
-
-		$html = $this->page_html( self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' );
-
-		$this->assertSame( $html, $this->run_filter( $html ) );
+	public static function broken_loaders(): array {
+		return [
+			// A failed read is cached as an empty source.
+			'unreadable file' => [ '', false ],
+			// WordPress only refuses script text it can't escape, which needs a type it
+			// doesn't know and text that could close the tag.
+			'refused tag'     => [ 'document.write( "<script></script>" );', true ],
+		];
 	}
 
-	public function test_refused_loader_tag_leaves_the_page_identical(): void {
-		// WordPress only refuses script text it can't escape, which needs a type it
-		// doesn't know and text that could close the tag.
-		$this->set_loader( 'document.write( "<script></script>" );' );
-		add_filter( 'wp_inline_script_attributes', fn( array $attributes ): array => $attributes + [ 'type' => 'text/plain' ] );
-		$this->setExpectedIncorrectUsage( 'WP_HTML_Tag_Processor::set_modifiable_text' );
+	/**
+	 * @dataProvider broken_loaders
+	 */
+	public function test_broken_loader_leaves_the_page_identical( string $source, bool $refused ): void {
+		$this->set_loader( $source );
 
-		$html = $this->page_html( self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' );
+		if ( $refused ) {
+			add_filter( 'wp_inline_script_attributes', fn( array $attributes ): array => $attributes + [ 'type' => 'text/plain' ] );
+			$this->setExpectedIncorrectUsage( 'WP_HTML_Tag_Processor::set_modifiable_text' );
+		}
+
+		$html = $this->instagram_page();
 
 		$this->assertSame( $html, $this->run_filter( $html ) );
 	}
@@ -285,11 +313,7 @@ final class EmbedLoadingTest extends TestCase {
 	public function test_pinit_delayed_only_with_a_pasted_pin(): void {
 		$script = '<script async defer src="//assets.pinterest.com/js/pinit.js"></script>';
 
-		$with = $this->run_filter( $this->page_html( self::PIN . $script ) );
-
-		$this->assertSame( [], $this->script_srcs( $with ) );
-		$this->assertSame( 1, substr_count( $with, self::LOADER_ID ) );
-		$this->assertStringContainsString( 'data-networks="pinterest"', $with );
+		$this->assert_delayed( $this->run_filter( $this->page_html( self::PIN . $script ) ), 'pinterest' );
 
 		$without_pin = $this->page_html( '<p>No pin</p>' . $script );
 
@@ -310,7 +334,7 @@ final class EmbedLoadingTest extends TestCase {
 		$this->assertStringContainsString( 'data-pin-hover="true" src="//assets.pinterest.com/js/pinit.js"', $mixed );
 		$this->assertStringContainsString( 'data-networks="pinterest"', $mixed );
 
-		$only_hover = $this->run_filter( $html . self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' );
+		$only_hover = $this->run_filter( $html . self::INSTAGRAM_QUOTE . self::INSTAGRAM_SCRIPT );
 
 		$this->assertStringContainsString( 'data-networks="instagram"', $only_hover );
 	}
@@ -329,18 +353,17 @@ final class EmbedLoadingTest extends TestCase {
 		$this->assertSame( $html, $this->run_filter( $html ) );
 
 		// With a real embed script on the same page, only that one loses its src.
-		$out = $this->run_filter( $this->page_html( $comment . $inline . self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' ) );
+		$out = $this->run_filter( $this->instagram_page( $comment . $inline ) );
 
 		$this->assertStringContainsString( $comment . $inline . self::INSTAGRAM_QUOTE, $out );
-		$this->assertSame( [], $this->script_srcs( $out ) );
-		$this->assertSame( 1, substr_count( $out, self::LOADER_ID ) );
+		$this->assert_delayed( $out, 'instagram' );
 	}
 
 	public function test_running_twice_gives_one_loader(): void {
-		$once = $this->run_filter( $this->page_html( self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' ) );
+		$once = $this->run_filter( $this->instagram_page() );
 
 		$this->assertSame( $once, $this->run_filter( $once ) );
-		$this->assertSame( 1, substr_count( $once, self::LOADER_ID ) );
+		$this->assert_delayed( $once, 'instagram' );
 	}
 
 	public function test_non_string_input(): void {
@@ -354,7 +377,7 @@ final class EmbedLoadingTest extends TestCase {
 	public function test_filter_turns_it_off(): void {
 		add_filter( 'mai_performance_media_lazy_embeds', '__return_false' );
 
-		$html = $this->page_html( self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' );
+		$html = $this->instagram_page();
 
 		$this->assertSame( $html, $this->run_filter( $html ) );
 	}
@@ -366,11 +389,8 @@ final class EmbedLoadingTest extends TestCase {
 	}
 
 	public function test_through_the_real_page_buffer(): void {
-		$html = $this->page_html( self::INSTAGRAM_QUOTE . '<script async src="//www.instagram.com/embed.js"></script>' );
+		$html = $this->instagram_page();
 
-		$out = $this->page( fn() => $html );
-
-		$this->assertSame( [], $this->script_srcs( $out ) );
-		$this->assertSame( 1, substr_count( $out, self::LOADER_ID ) );
+		$this->assert_delayed( $this->page( fn() => $html ), 'instagram' );
 	}
 }
