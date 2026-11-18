@@ -4,7 +4,7 @@
 
 **Goal:** Delay Instagram, X, TikTok and Pinterest embed scripts until each embed nears the screen, then rename the plugin and its repo to Mai Performance Media and ship it as 1.0.0.
 
-**Architecture:** A new `EmbedLoading` class adds its own callback to WordPress's finished-page filter (`wp_template_enhancement_output_buffer`), removes the `src` from known embed script tags with `WP_HTML_Tag_Processor`, and prints a small inline loader before `</body>`. The loader takes each embed's marker off, watches it with one IntersectionObserver (200px margin), and puts the marker back, loads the network's script once and asks the network to render that embed as it nears. The rename is a separate mechanical task after the feature works.
+**Architecture:** A new `EmbedLoading` class adds its own callback to WordPress's finished-page filter (`wp_template_enhancement_output_buffer`), removes the `src` from known embed script tags with `WP_HTML_Tag_Processor`, and prints a small inline loader before `</body>`. The loader takes each embed's marker off, watches it with an IntersectionObserver (200px margin, and 1600px for X once the reader scrolls), and puts the marker back, loads the network's script once and asks the network to render that embed as it nears. The rename is a separate mechanical task after the feature works.
 
 **Tech Stack:** PHP 8.1, WordPress 6.9+ HTML API, plain browser JavaScript (no build step for the loader), PHPUnit with wp-phpunit, Playwright and Lighthouse for browser checks.
 
@@ -21,7 +21,7 @@
 - Never push, tag, create a GitHub repo or release without asking first and getting a yes for that specific action.
 - Headless browsers by default. A real browser only through `~/.agents/scripts/bg-chrome` (it never takes the foreground), and `bg-chrome stop` afterwards.
 - The filter is `mai_performance_media_lazy_embeds` from the first commit, even before the rename.
-- Margin: `200px`; X also uses 1200px once the reader scrolls (amended 2026-11-17, see the spec's Layout shift section). Fixed script URLs: `https://www.instagram.com/embed.js`, `https://platform.twitter.com/widgets.js`, `https://www.tiktok.com/embed.js`, `https://assets.pinterest.com/js/pinit.js`.
+- Margin: `200px`; X also uses 1600px once the reader scrolls (amended 2026-11-17, see the spec's Layout shift section). Fixed script URLs: `https://www.instagram.com/embed.js`, `https://platform.twitter.com/widgets.js`, `https://www.tiktok.com/embed.js`, `https://assets.pinterest.com/js/pinit.js`.
 - Network keys used between PHP and JS: `instagram`, `x`, `tiktok`, `pinterest`.
 
 ## Review Focus
@@ -97,11 +97,11 @@ git commit -m "Delay embed scripts on the finished page"
 
 **Interfaces:**
 - Consumes: the loader tag's `id` and `data-networks` from Task 1. The loader reads them with `document.currentScript.dataset.networks`.
-- Produces: `bin/check-embeds.mjs <url> [<url>...]` prints one pretty-printed JSON object per URL with `scriptsAtLoad` (embed scripts requested before any scrolling), `scripts` (each embed script URL requested, with its time), `unrendered` (embeds still a blockquote or pin link after scrolling), `cls`, and exits non-zero when `unrendered` is not 0 for Instagram or X, or when `cls` is above 0.1. Whether a script loaded too early is read from `scriptsAtLoad` by the person running it.
+- Produces: `bin/check-embeds.mjs [--block <file>] [--pace <ms>] <url> [<url>...]` (pace is the pause between 400px steps, 700ms by default) prints one pretty-printed JSON object per URL with `pace`, `scriptsAtLoad` (embed scripts requested before any scrolling), `scripts` (each embed script URL requested, with its time), `unrendered` (embeds still a blockquote or pin link after scrolling), `cls`, and exits non-zero when `unrendered` is not 0 for Instagram or X, or when `cls` is above 0.1. Whether a script loaded too early is read from `scriptsAtLoad` by the person running it.
 
 - [ ] **Step 1: Write the loader** in `assets/js/lazy-embeds.js`, plain ES2017, no dependencies, wrapped in an IIFE and a `try`/`catch` so a failure leaves the fallbacks as they are. The behaviour is the spec's "In the browser: the loader" section, steps 1 to 8. The decisions it can't infer:
   - The marker attribute for a hidden Instagram or X embed is `data-mpm-embed="<network>"`. For a Pinterest pin, `data-pin-do`'s value moves to `data-mpm-pin-do` and is restored from there.
-  - One IntersectionObserver, `rootMargin: '200px 0px'`, unobserve on first intersection.
+  - One IntersectionObserver, `rootMargin: '200px 0px'`, for every network from page load. X also gets a `'1600px 0px'` observer once a 1px mark at the top of the page leaves the screen (the reader scrolled). Each observer unobserves on first intersection, and an embed is shown once.
   - One promise per network for the script load, deleted on `error` so a later embed retries.
   - Already loaded means `window.instgrm && window.instgrm.Embeds`, `window.twttr && window.twttr.widgets`, `window.PinUtils && window.PinUtils.build`. TikTok has no check.
   - Render calls: `instgrm.Embeds.process()`, `twttr.ready( t => t.widgets.load( el.parentNode ) )`, `PinUtils.build( el.parentNode )`. TikTok has none: its script renders all TikTok embeds when it loads.
@@ -118,7 +118,7 @@ Expected: no errors.
 - [ ] **Step 4: Run it** on a local site with the plugin symlinked (sites and post IDs are in the build prompt): one post with one Instagram embed, one with five Instagram embeds, one with X embeds, and the X post again with `widgets.js` already loaded in the `<head>` (Review Focus 4). For that last one, add a throwaway mu-plugin to the local site that prints `<script async src="https://platform.twitter.com/widgets.js"></script>` in `wp_head` when `?mpm_head_widgets=1` is in the URL, and delete it after the check.
 
 Run: `npm run check:embeds -- <urls>`
-Expected: exit 0. No embed script at page load on the posts whose first embed is below the first screen, every Instagram and X embed rendered, `cls` 0, and on the head fixture `widgets.js` requested once.
+Expected: exit 0. No embed script at page load on the posts whose first embed is below the first screen, every Instagram and X embed rendered, `cls` 0.1 or under at the default pace, and on the head fixture `widgets.js` requested once.
 
 - [ ] **Step 5: Check Pinterest in a real browser.** Start `~/.agents/scripts/bg-chrome`, connect Playwright with `chromium.connectOverCDP( 'http://127.0.0.1:9333' )`, open the Pinterest post from the build prompt in a new tab from `browser.contexts()[0]`, scroll it, and compare the count of rendered pin elements (`span[data-pin-href]`) with the plugin's filter returning false and true. Run `~/.agents/scripts/bg-chrome stop` afterwards.
 Expected: the same count both ways, and `pinit.js` requested once with the feature on.

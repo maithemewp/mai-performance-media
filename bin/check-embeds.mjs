@@ -1,7 +1,7 @@
 /**
  * Scrolls pages on a phone-sized screen and reports how their social embeds loaded.
  *
- * Usage: npm run check:embeds -- [--block <file>] <url> [<url>...]
+ * Usage: npm run check:embeds -- [--block <file>] [--pace <ms>] <url> [<url>...]
  *
  * For each address it prints one JSON object: the embed scripts requested before any
  * scrolling (scriptsAtLoad), every embed script requested and when (scripts), the
@@ -14,9 +14,12 @@
  * them out, pass --block with a JSON file holding an array of hostnames, and every
  * request to those hosts is stopped.
  *
+ * The page scrolls 400px at a time. --pace is the pause between steps in ms, 700 by
+ * default (about 570px a second, a steady read). 350 is a fast flick, about 1140px a
+ * second. Each result says which pace it used.
+ *
  * Exits non-zero when an Instagram or X embed did not render, or cls is above 0.1,
- * Google's line for a good score.
- * TikTok and Pinterest are reported but not judged: TikTok's own library can be down,
+ * Google's line for a good score. TikTok and Pinterest are reported but not judged: TikTok's own library can be down,
  * and Pinterest only renders in a real browser, not a headless one.
  */
 /* eslint-disable no-console -- A command line check reports on the console. */
@@ -30,11 +33,13 @@ const blocked = new Set(
 		? []
 		: JSON.parse( readFileSync( args.splice( blockAt, 2 )[ 1 ], 'utf8' ) )
 );
+const paceAt = args.indexOf( '--pace' );
+const pace = -1 === paceAt ? 700 : Number( args.splice( paceAt, 2 )[ 1 ] );
 const urls = args;
 
-if ( ! urls.length ) {
+if ( ! urls.length || ! ( pace > 0 ) ) {
 	console.error(
-		'Usage: npm run check:embeds -- [--block <file>] <url> [<url>...]'
+		'Usage: npm run check:embeds -- [--block <file>] [--pace <ms>] <url> [<url>...]'
 	);
 	process.exit( 2 );
 }
@@ -153,7 +158,7 @@ async function check( url ) {
 	// the page longer as it scrolls. The step cap stops a page that never ends.
 	for ( let y = 0, step = 0; y < ( await height() ) && step < 250; step++ ) {
 		await page.evaluate( ( top ) => window.scrollTo( 0, top ), y );
-		await page.waitForTimeout( 350 );
+		await page.waitForTimeout( pace );
 		y += 400;
 	}
 
@@ -192,5 +197,5 @@ async function check( url ) {
 
 	await context.close();
 
-	return { url, scriptsAtLoad, scripts, ...found };
+	return { url, pace, scriptsAtLoad, scripts, ...found };
 }

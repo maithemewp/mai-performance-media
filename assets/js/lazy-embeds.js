@@ -6,7 +6,7 @@
  * delayed. Here each embed's marker comes off, so the network's script would not
  * render it yet, and goes back when the embed comes within 200px of the screen. Then
  * the script loads, once per network, and renders that embed. X embeds also start
- * 1200px early once the reader scrolls, because a tweet is slow to render and grows.
+ * 1600px early once the reader scrolls, because a tweet is slow to render and grows.
  *
  * Any error leaves the pasted fallbacks as they are, which is what a reader sees
  * today when a blocker stops the network's script.
@@ -43,10 +43,12 @@
 					'a.twitter-hashtag-button',
 					'a.twitter-mention-button',
 				],
-				// A first tweet took about 1.15s to render and grew about 400px, so at 200px a
-				// fast scroll reached it first and the page jumped. A wider margin from the
-				// start loaded X during page load on many posts, so it waits for a scroll.
-				lead: '1200px 0px',
+				// A first tweet took about 1 to 1.2s to render and then grew, so at 200px a
+				// fast scroll reached it first and the page jumped. In fast-scroll tests 1600px
+				// was the smallest lead that kept the jump under Google's 0.1 line. Used from
+				// the start, a wide margin loaded X during page load on many posts, so it
+				// waits for a scroll.
+				lead: '1600px 0px',
 				// X's own snippet makes an empty twttr early, so twttr alone is not enough.
 				loaded: () => window.twttr && window.twttr.widgets,
 				// X only looks inside the element it is given, and ready() waits until it can.
