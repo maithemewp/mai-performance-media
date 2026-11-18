@@ -25,11 +25,11 @@ git -C ~/Plugins/mai-performance-images log --oneline --author=<your-git-email> 
 
 Check: the list is the commits you mean to ship, and `git -C ~/Plugins/mai-performance-images log --oneline main..develop` shows nothing you do not recognize or have left out on purpose.
 
-Cherry-pick them onto `main`, oldest first.
+Cherry-pick them onto `main`, oldest first. The `^` keeps the oldest commit, because a range written `a..b` leaves `a` out.
 
 ```
 git -C ~/Plugins/mai-performance-images switch main
-git -C ~/Plugins/mai-performance-images cherry-pick <oldest-commit>..<newest-commit>
+git -C ~/Plugins/mai-performance-images cherry-pick <oldest-commit>^..<newest-commit>
 ```
 
 Check: `git -C ~/Plugins/mai-performance-images log --oneline -5` shows your commits on top of 0.9.1, and the `Version:` line in `mai-performance-media.php` reads 1.0.0.
@@ -66,6 +66,17 @@ mai-sites config check <site>
 
 Check: `config check` prints `✓ All checks passed.` for the site.
 
+A push sends the folder as it is on disk, so push the release and nothing else. Step 2 ends on `develop`, so switch to `main` at the tag first, and confirm `vendor/` and `build/` are there, since sites run them as committed.
+
+```
+git -C ~/Plugins/mai-performance-images checkout 1.0.0
+git -C ~/Plugins/mai-performance-images status --short
+git -C ~/Plugins/mai-performance-images describe --tags --exact-match
+ls ~/Plugins/mai-performance-images/vendor ~/Plugins/mai-performance-images/build
+```
+
+Check: `status --short` prints nothing, `describe` prints `1.0.0`, and both folders list files. Stay on the tag for every site, then switch back with `git -C ~/Plugins/mai-performance-images switch develop`.
+
 **Site where the old plugin is active.**
 
 First install the new plugin, inactive. A push only copies files, so nothing runs yet. Dry run first and read the plan.
@@ -77,13 +88,21 @@ mai-sites push <site> .
 
 Check: the plan names `wp-content/plugins/mai-performance-media` and the push ends with a `✓`.
 
-Then deactivate the old plugin, activate the new one and delete the old one in one command, so the two never run together. If the first step fails, nothing after it runs.
+Then deactivate the old plugin, activate the new one and delete the old one in one command, so the two never run together. If the deactivate fails, nothing after it runs and the old plugin stays active. If the deactivate works and the activate fails, for example a fatal error in the new plugin, the site has neither plugin active and the old one is not deleted. Run the rollback below straight away.
 
 ```
 mai-sites run <site> --no-parallel --shell='wp plugin deactivate mai-performance-images && wp plugin activate mai-performance-media && wp plugin delete mai-performance-images'
 ```
 
 Check: the command exits 0, and `mai-sites run <site> --yes -- wp plugin list` shows `mai-performance-media` active at 1.0.0 and no `mai-performance-images` row.
+
+Rollback, if the chain stops after the deactivate or the site breaks. Put the old plugin back and make sure the new one is off. This only works before the old one is deleted, so check each site before you move to the next.
+
+```
+mai-sites run <site> --no-parallel --shell='wp plugin activate mai-performance-images; wp plugin deactivate mai-performance-media'
+```
+
+Check: `mai-sites run <site> --yes -- wp plugin is-active mai-performance-images` exits 0 and the site loads.
 
 **Site where the old plugin is inactive.** The site keeps what it had, so it stays without the plugin. Do not install the new one. Only delete the old one.
 
@@ -93,25 +112,43 @@ mai-sites run <site> --no-parallel -- wp plugin delete mai-performance-images
 
 Check: `mai-sites run <site> --yes -- wp plugin list` shows no `mai-performance-images` row and no `mai-performance-media` row.
 
-If a site goes wrong after the swap, activate the old plugin again with `mai-sites run <site> --no-parallel -- wp plugin activate mai-performance-images` and deactivate the new one. This only works before the old one is deleted, so check the site before you run the delete on the next one.
-
-What I could not confirm: I read the `--help` and the `run.md` and `push-pull.md` notes for `mai-sites`, and ran no write. The notes say `--shell` runs a string on the server in the site's WordPress root, and is never treated as a read. They do not show a `&&` chain through `--shell`, or a `wp plugin delete` after `--` as an accepted write, so run the first site and read its output before you do the rest. If `--shell` refuses the chain, run the three `wp plugin` commands as three separate `mai-sites run` commands, deactivate and activate back to back.
+Procedure note: this was written from `mai-sites help` and the `run.md` and `push-pull.md` notes, and no write was run. The notes say `--shell` runs a string on the server in the site's WordPress root and is never treated as a read. They do not show a `&&` chain through `--shell`, or a `wp plugin delete` after `--` as an accepted write. Run the first site and read its output before the rest. If `--shell` refuses the chain, run the three `wp plugin` commands as three separate `mai-sites run` commands, deactivate and activate back to back.
 
 ## 4. Check each site
 
-After each swap, check the site boots and serves a page with one `fetchpriority="high"` image. The `mpi` query is a random cache-buster, so a page cache cannot serve an old page. Use any random value.
+After each swap, run these four checks. The `mpi` query is a random cache-buster, so a page cache cannot serve an old page. Use any random value.
+
+First, the site boots.
 
 ```
-curl -sk 'https://<site>/?mpi=<random>' | rg -c 'fetchpriority="high"'
+curl -sk -o /dev/null -w '%{http_code}' 'https://<site>/?mpi=<random>'
 ```
 
-Check: the site answers with a page and the count is 1. Open one post that has an Instagram or X embed and check the loader is there.
+Check: prints 200. A fatal error or a blank page is a failed swap, so roll back and fix it before the next site.
+
+Second, the new plugin is active. `wp plugin is-active` is on the `mai-sites` read list, so `--yes` is all it needs.
 
 ```
-curl -sk 'https://<site>/<post-path>/?mpi=<random>' | rg -c 'id="mai-performance-media-lazy-embeds"'
+mai-sites run <site> --yes -- wp plugin is-active mai-performance-media
 ```
 
-Check: the count is 1 on a post with a delayed embed. A site that boots but prints a fatal error, or a blank page, is a failed swap, so stop and fix it before the next site.
+Check: exits 0.
+
+Third, the new code is running. Open a post that has an Instagram or X embed and look for the loader. WordPress core adds some `fetchpriority="high"` on its own, so only this loader proves the new plugin is serving the page.
+
+```
+curl -sk 'https://<site>/<post-path>/?mpi=<random>' | rg -o 'id="mai-performance-media-lazy-embeds"' | wc -l
+```
+
+Check: prints 1.
+
+Fourth, a secondary check on images. It also passes with the plugin off, so it never replaces the loader check.
+
+```
+curl -sk 'https://<site>/?mpi=<random>' | rg -o 'fetchpriority="high"' | wc -l
+```
+
+Check: prints 1.
 
 ## 5. Confirm no site is left
 
