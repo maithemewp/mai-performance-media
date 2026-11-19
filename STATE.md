@@ -1,8 +1,10 @@
 # State
-Updated: November 18, 2026 by Claude
+Updated: November 19, 2026 by Claude
 
 ## Now
-1.0.0, Mai Performance Media, is released and on every site. On November 18 the GitHub repo was renamed to `maithemewp/mai-performance-media`, `main` and `develop` were pushed, and tag 1.0.0 was pushed (tags only, no GitHub release, as before). 64 sites were swapped with `mai-sites`: 59 now run 1.0.0 active, and 5 that had the old plugin inactive only had it deleted. `mai-sites plugins list mai-performance-images` lists no site; 3 sites on one server never answered and are left out on purpose. Spec: `docs/specs/2026-11-17-lazy-embeds.md`. Plan: `docs/plans/2026-11-17-lazy-embeds.md`. Runbook: `docs/runbooks/2026-11-17-swap-to-mai-performance-media.md`.
+1.0.0 is now on 181 sites (`mai-sites plugins list mai-performance-media`, November 19). On November 18 and 19 it was installed on 122 sites that never had it: 94 production Mai sites from a read-only survey, then 28 Mike picked one by one (survey and decisions in `/tmp/mpm-fleet/`, scripts `/tmp/mpm-install-a.sh` and `/tmp/mpm-install-b.sh`, which may be gone after a reboot). Rules used: Mai themes only; a dev copy only when its production site has the plugin; on WP Rocket sites, WP Rocket's image and iframe lazy load were turned off and script delay left on (before values in `/tmp/mpm-install-b-rocket/`); Jetpack lazy images left on where found. Mai Embed Fixer 0.3.0 went to the sites with pasted Instagram or X embeds. One dev copy was skipped because its Redis object cache can't connect. While walking the list, one client site turned out hacked (its row in the mai-sites-doctor findings log, 2026-11-18) (script loader appended to 3 JS files). It was cleaned, a new mai-sites-doctor check `js-append-redirect` was merged, and its Yoast Premium 7.1.1 was swapped for free Yoast plus Safe Redirect Manager (517 redirects).
+
+Before that, 1.0.0 was released on November 18. On November 18 the GitHub repo was renamed to `maithemewp/mai-performance-media`, `main` and `develop` were pushed, and tag 1.0.0 was pushed (tags only, no GitHub release, as before). 64 sites were swapped with `mai-sites`: 59 now run 1.0.0 active, and 5 that had the old plugin inactive only had it deleted. `mai-sites plugins list mai-performance-images` lists no site; 3 sites on one server never answered and are left out on purpose. Spec: `docs/specs/2026-11-17-lazy-embeds.md`. Plan: `docs/plans/2026-11-17-lazy-embeds.md`. Runbook: `docs/runbooks/2026-11-17-swap-to-mai-performance-media.md`.
 
 - Instagram, X, TikTok and Pinterest embed scripts are delayed and each loads as its first embed nears the screen (`classes/class-embed-loading.php`, `assets/js/lazy-embeds.js`). Filter `mai_performance_media_lazy_embeds` turns it off. If the loader can't be read or printed, the page is left as it came.
 - Loader margins: 200px for every network at rest, and X also from 1600px once the reader starts scrolling. At 200px alone, fast-scroll CLS had a median of 0.166 on 8 X posts. With the split, no sampled post loaded a script at page load, and every check at the 700ms pace scored cls 0.
@@ -10,6 +12,8 @@ Updated: November 18, 2026 by Claude
 - Kept on purpose: `data-mpi-loading`, the `?mpi=` cache-buster, the `imgLoading` block attribute, the `image_loading` and `image_loading_count` settings, and every `field_63f9...` ACF key.
 
 ## Next
+- Sites left out on purpose and worth a later pass: non-Mai themes, sites with LiteSpeed Cache or Autoptimize lazy load, and full WP Rocket removal across the fleet (a separate job).
+- Delete the inactive Yoast Premium on that hacked site around November 26 if nothing came up.
 - Check one TikTok post in a real browser once TikTok's embeds work again (TODO.md).
 - Update the outside references, runbook step 6: the company theme's plugin list, client themes' `setup/design.json` plugin lists, the two skills, and Hindsight.
 - In a few weeks, compare real-user CLS and LCP on two embed-heavy sites (Chrome's field data and the ad network's Core Web Vitals report), especially X-heavy posts.
